@@ -36,6 +36,15 @@ class AppTheme {
     return Theme.of(context).brightness == Brightness.dark;
   }
 
+  static Color backgroundColor(BuildContext ctx) =>
+      isDark(ctx) ? darkBackground : background;
+
+  static Color surfaceColor(BuildContext ctx) =>
+      isDark(ctx) ? darkSurface : Colors.white;
+
+  static Color textSecondaryColor(BuildContext ctx) =>
+      isDark(ctx) ? darkTextSecondary : textGray;
+
   static Color cardColor(BuildContext context) {
     return isDark(context) ? darkSurface : Colors.white;
   }
@@ -115,6 +124,37 @@ class AppTheme {
           offset: const Offset(0, 10),
         ),
       ],
+    );
+  }
+
+  static ButtonStyle _baseElevatedButtonStyle(Color bgColor, Color fgColor) {
+    return ElevatedButton.styleFrom(
+      backgroundColor: bgColor,
+      foregroundColor: fgColor,
+      elevation: 0,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      textStyle: GoogleFonts.outfit(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+
+  static ButtonStyle _baseOutlinedButtonStyle(Color color) {
+    return OutlinedButton.styleFrom(
+      foregroundColor: color,
+      side: BorderSide(color: color, width: 1.5),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      textStyle: GoogleFonts.outfit(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+      ),
     );
   }
 
@@ -211,33 +251,10 @@ class AppTheme {
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primaryIndigo,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          textStyle: GoogleFonts.outfit(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        style: _baseElevatedButtonStyle(primaryIndigo, Colors.white),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: primaryIndigo,
-          side: const BorderSide(color: primaryIndigo, width: 1.5),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          textStyle: GoogleFonts.outfit(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        style: _baseOutlinedButtonStyle(primaryIndigo),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -384,33 +401,10 @@ class AppTheme {
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: darkPrimaryIndigo,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          textStyle: GoogleFonts.outfit(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        style: _baseElevatedButtonStyle(darkPrimaryIndigo, Colors.white),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: darkPrimaryIndigo,
-          side: const BorderSide(color: darkPrimaryIndigo, width: 1.5),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          textStyle: GoogleFonts.outfit(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        style: _baseOutlinedButtonStyle(darkPrimaryIndigo),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,

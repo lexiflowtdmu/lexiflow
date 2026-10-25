@@ -4,6 +4,7 @@
 
 import { Hono } from 'hono';
 import type { AuthContext, Bindings, Variables } from '../types';
+import { sanitizeString, getValidWordParam } from '../utils/sanitize';
 
 const bookmarks = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -55,9 +56,9 @@ bookmarks.get('/list', async (c) => {
 bookmarks.get('/:word', async (c) => {
   const { uid } = c.get('auth');
   const db = c.env.DB;
-  const word = decodeURIComponent(c.req.param('word')).trim().toLowerCase();
+  const word = getValidWordParam(c);
 
-  if (!word || word.length === 0) {
+  if (!word) {
     return c.json({ success: false, error: 'Từ vựng không hợp lệ.' }, 400);
   }
 
@@ -91,7 +92,7 @@ bookmarks.post('/', async (c) => {
     }>();
     const word = (body.word ?? '').trim().toLowerCase();
     const makeBookmarked = body.makeBookmarked ?? false;
-    const translation = body.translation ?? '';
+    const translation = sanitizeString(body.translation ?? '', 2000);
 
     if (!word) {
       return c.json({ success: false, error: 'Từ vựng không được để trống.' }, 400);

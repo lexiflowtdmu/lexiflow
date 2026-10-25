@@ -21,15 +21,15 @@ export interface SocialNudgeItem {
  */
 nudgeRoutes.post('/send', async (c) => {
   try {
+    const { uid: senderUid } = c.get('auth');
     const body = await c.req.json<{
-      senderUid: string;
       receiverUid: string;
       type: 'cheer' | 'nudge';
       message?: string;
     }>();
 
-    if (!body.senderUid || !body.receiverUid || !body.type) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing senderUid, receiverUid or type' }, 400);
+    if (!body.receiverUid || !body.type) {
+      return c.json<ApiResponse>({ success: false, error: 'Missing receiverUid or type' }, 400);
     }
 
     const db = c.env.DB;
@@ -44,7 +44,7 @@ nudgeRoutes.post('/send', async (c) => {
         `INSERT INTO social_nudges (id, sender_uid, receiver_uid, type, message, is_read, created_at)
          VALUES (?, ?, ?, ?, ?, 0, datetime('now'))`
       )
-      .bind(id, body.senderUid, body.receiverUid, body.type, body.message || defaultMsg)
+      .bind(id, senderUid, body.receiverUid, body.type, body.message || defaultMsg)
       .run();
 
     return c.json<ApiResponse<{ id: string; message: string }>>({
@@ -62,8 +62,7 @@ nudgeRoutes.post('/send', async (c) => {
  */
 nudgeRoutes.get('/my-nudges', async (c) => {
   try {
-    const uid = c.req.query('uid');
-    if (!uid) return c.json<ApiResponse>({ success: false, error: 'Missing uid' }, 400);
+    const { uid } = c.get('auth');
 
     const db = c.env.DB;
     const res = await db

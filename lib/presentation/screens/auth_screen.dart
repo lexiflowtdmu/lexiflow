@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../bloc/auth_bloc.dart';
 import 'dashboard_screen.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/theme_extension.dart';
 import '../../core/utils/page_transitions.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -45,32 +45,29 @@ class _AuthScreenState extends State<AuthScreen> {
 
   void _showForgotPasswordDialog() {
     final resetEmailController = TextEditingController(text: _emailController.text);
-    final cardColor = AppTheme.cardColor(context);
-    final textColor = AppTheme.textColor(context);
-    final subColor = AppTheme.subTextColor(context);
 
     showDialog(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: cardColor,
+          backgroundColor: context.cardColor,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
             'Khôi phục mật khẩu',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor),
+            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.textColor),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'Nhập địa chỉ email của bạn để nhận liên kết đặt lại mật khẩu.',
-                style: GoogleFonts.outfit(fontSize: 14, color: subColor),
+                style: GoogleFonts.outfit(fontSize: 14, color: context.subTextColor),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: resetEmailController,
                 keyboardType: TextInputType.emailAddress,
-                style: GoogleFonts.outfit(color: textColor),
+                style: GoogleFonts.outfit(color: context.textColor),
                 decoration: const InputDecoration(
                   labelText: 'Email khôi phục',
                   prefixIcon: Icon(Icons.email_outlined),
@@ -105,11 +102,6 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = AppTheme.cardColor(context);
-    final textColor = AppTheme.textColor(context);
-    final subTextColor = AppTheme.subTextColor(context);
-    final borderColor = AppTheme.borderColor(context);
-    final primaryColor = AppTheme.primaryColor(context);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -124,7 +116,7 @@ class _AuthScreenState extends State<AuthScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Đã gửi liên kết khôi phục mật khẩu đến ${state.email}. Vui lòng kiểm tra hộp thư!'),
-                backgroundColor: AppTheme.successGreen,
+                backgroundColor: context.successGreen,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
@@ -133,7 +125,7 @@ class _AuthScreenState extends State<AuthScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: AppTheme.errorRed,
+                backgroundColor: context.errorRed,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
@@ -155,12 +147,12 @@ class _AuthScreenState extends State<AuthScreen> {
                       height: 100,
                       width: 100,
                       decoration: BoxDecoration(
-                        color: cardColor,
+                        color: context.cardColor,
                         borderRadius: BorderRadius.circular(28),
-                        border: Border.all(color: borderColor, width: 1),
+                        border: Border.all(color: context.borderColor, width: 1),
                         boxShadow: [
                           BoxShadow(
-                            color: primaryColor.withValues(alpha: 0.15),
+                            color: context.primaryColor.withValues(alpha: 0.15),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           )
@@ -171,7 +163,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         child: Icon(
                           Icons.menu_book_rounded,
                           size: 52,
-                          color: primaryColor,
+                          color: context.primaryColor,
                         ),
                       ),
                     ),
@@ -181,7 +173,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: textColor,
+                        color: context.textColor,
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -193,7 +185,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       textAlign: TextAlign.center,
                       style: GoogleFonts.outfit(
                         fontSize: 14,
-                        color: subTextColor,
+                        color: context.subTextColor,
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -202,12 +194,12 @@ class _AuthScreenState extends State<AuthScreen> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: cardColor,
+                        color: context.cardColor,
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: borderColor, width: 1),
+                        border: Border.all(color: context.borderColor, width: 1),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.03),
+                            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.03),
                             blurRadius: 24,
                             offset: const Offset(0, 8),
                           )
@@ -221,10 +213,10 @@ class _AuthScreenState extends State<AuthScreen> {
                             TextFormField(
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
-                              style: GoogleFonts.outfit(color: textColor),
+                              style: GoogleFonts.outfit(color: context.textColor),
                               decoration: InputDecoration(
                                 labelText: 'Địa chỉ Email',
-                                prefixIcon: Icon(Icons.email_outlined, color: subTextColor),
+                                prefixIcon: Icon(Icons.email_outlined, color: context.subTextColor),
                               ),
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
@@ -240,10 +232,10 @@ class _AuthScreenState extends State<AuthScreen> {
                             TextFormField(
                               controller: _passwordController,
                               obscureText: true,
-                              style: GoogleFonts.outfit(color: textColor),
+                              style: GoogleFonts.outfit(color: context.textColor),
                               decoration: InputDecoration(
                                 labelText: 'Mật khẩu',
-                                prefixIcon: Icon(Icons.lock_outlined, color: subTextColor),
+                                prefixIcon: Icon(Icons.lock_outlined, color: context.subTextColor),
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -264,7 +256,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                     'Quên mật khẩu?',
                                     style: GoogleFonts.outfit(
                                       fontSize: 13,
-                                      color: primaryColor,
+                                      color: context.primaryColor,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -283,15 +275,15 @@ class _AuthScreenState extends State<AuthScreen> {
                             // Divider "Hoặc"
                             Row(
                               children: [
-                                Expanded(child: Divider(color: borderColor)),
+                                Expanded(child: Divider(color: context.borderColor)),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 12.0),
                                   child: Text(
                                     'hoặc',
-                                    style: GoogleFonts.outfit(color: subTextColor, fontSize: 13),
+                                    style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 13),
                                   ),
                                 ),
-                                Expanded(child: Divider(color: borderColor)),
+                                Expanded(child: Divider(color: context.borderColor)),
                               ],
                             ),
                             const SizedBox(height: 20),
@@ -301,7 +293,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               onPressed: state is AuthLoading ? null : _googleSignIn,
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(vertical: 14),
-                                side: BorderSide(color: borderColor, width: 1.5),
+                                side: BorderSide(color: context.borderColor, width: 1.5),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                               ),
                               child: Row(
@@ -317,7 +309,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                       'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg',
                                       height: 18,
                                       width: 18,
-                                      errorBuilder: (context, error, stackTrace) => Icon(Icons.g_mobiledata_rounded, color: primaryColor, size: 24),
+                                      errorBuilder: (context, error, stackTrace) => Icon(Icons.g_mobiledata_rounded, color: context.primaryColor, size: 24),
                                     ),
                                   ),
                                   const SizedBox(width: 10),
@@ -326,7 +318,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                     style: GoogleFonts.outfit(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600,
-                                      color: textColor,
+                                      color: context.textColor,
                                     ),
                                   ),
                                 ],
@@ -346,7 +338,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: Text(
                         _isLogin ? 'Chưa có tài khoản? Đăng ký ngay' : 'Đã có tài khoản? Đăng nhập',
                         style: GoogleFonts.outfit(
-                          color: primaryColor,
+                          color: context.primaryColor,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

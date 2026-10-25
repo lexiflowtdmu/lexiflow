@@ -48,7 +48,7 @@ class CloudflareService {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return null;
     try {
-      return await user.getIdToken(true);
+      return await user.getIdToken();
     } catch (_) {
       return null;
     }
@@ -93,6 +93,17 @@ class CloudflareService {
     final response = await _client.delete(
       Uri.parse('$_baseUrl$path'),
       headers: headers,
+    );
+    _checkResponse(response);
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> _patch(String path, Map<String, dynamic> body) async {
+    final headers = await _authHeaders();
+    final response = await _client.patch(
+      Uri.parse('$_baseUrl$path'),
+      headers: headers,
+      body: jsonEncode(body),
     );
     _checkResponse(response);
     return jsonDecode(response.body) as Map<String, dynamic>;
@@ -248,8 +259,203 @@ class CloudflareService {
     }
   }
 
+  /// Lấy đầy đủ dữ liệu streak: current + longest.
+  Future<Map<String, int>> getStreakData() async {
+    try {
+      final data = await _get('/streak');
+      return {
+        'current': (data['streak'] as num?)?.toInt() ?? 0,
+        'longest': (data['longest_streak'] as num?)?.toInt() ?? 0,
+      };
+    } catch (_) {
+      return {'current': 0, 'longest': 0};
+    }
+  }
+
   /// Ghi nhận phiên học hôm nay, cập nhật streak.
   Future<void> updateStudyStreak(String uid) async {
     await _post('/streak', {});
+  }
+
+  // ---------------------------------------------------------------
+  // Farm Mini-Game
+  // ---------------------------------------------------------------
+
+  Future<Map<String, dynamic>> getFarmState() async {
+    final data = await _get('/farm/state');
+    return (data['data'] as Map<String, dynamic>?) ?? {};
+  }
+
+  Future<void> farmPlant(int slotIndex, String cropType) async {
+    await _post('/farm/plant', {'slot_index': slotIndex, 'crop_type': cropType});
+  }
+
+  Future<void> farmWater(int drops) async {
+    await _post('/farm/water', {'drops': drops});
+  }
+
+  Future<Map<String, dynamic>> farmHarvest(String plotId) async {
+    final data = await _post('/farm/harvest', {'plot_id': plotId});
+    return (data['data'] as Map<String, dynamic>?) ?? {};
+  }
+
+  Future<Map<String, dynamic>> farmFulfillOrder(String orderId) async {
+    final data = await _post('/farm/orders/$orderId/fulfill', {});
+    return (data['data'] as Map<String, dynamic>?) ?? {};
+  }
+
+  Future<void> farmSkipOrder(String orderId) async {
+    await _post('/farm/orders/$orderId/skip', {});
+  }
+
+  // ---------------------------------------------------------------
+  // Home Mini-Game (Pet + Room)
+  // ---------------------------------------------------------------
+
+  Future<Map<String, dynamic>> getHomeState() async {
+    final data = await _get('/home/state');
+    return (data['data'] as Map<String, dynamic>?) ?? {};
+  }
+
+  Future<void> petFeed(String itemId) async {
+    await _post('/home/pet/feed', {'item_id': itemId});
+  }
+
+  Future<void> petPlay(String itemId) async {
+    await _post('/home/pet/play', {'item_id': itemId});
+  }
+
+  Future<void> shopBuyFurniture(String itemId, int roomSlot) async {
+    await _post('/home/shop/buy', {'item_id': itemId, 'room_slot': roomSlot});
+  }
+
+  Future<void> removeFurniture(String id) async {
+    await _delete('/home/furniture/$id');
+  }
+
+  Future<void> renamePet(String name) async {
+    await _patch('/home/pet/rename', {'name': name});
+  }
+
+  // ---------------------------------------------------------------
+  // Deck Summary
+  // ---------------------------------------------------------------
+
+  /// Lấy tóm tắt số lượng flashcard (single aggregated query, không tải toàn bộ list).
+  Future<Map<String, int>> getDeckSummary() async {
+    try {
+      final data = await _get('/decks/summary');
+      final summary = data['data']?['summary'] as Map<String, dynamic>? ?? {};
+      return {
+        'totalCards': (summary['totalCards'] as num?)?.toInt() ?? 0,
+        'dueCards': (summary['dueCards'] as num?)?.toInt() ?? 0,
+        'newCards': (summary['newCards'] as num?)?.toInt() ?? 0,
+        'learningCards': (summary['learningCards'] as num?)?.toInt() ?? 0,
+      };
+    } catch (_) {
+      return {'totalCards': 0, 'dueCards': 0, 'newCards': 0, 'learningCards': 0};
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Admin API
+  // ---------------------------------------------------------------
+
+  Future<Map<String, dynamic>> adminGetStats() async {
+    final data = await _get('/admin/stats');
+    return (data['data'] as Map<String, dynamic>?) ?? {};
+  }
+
+  Future<List<Map<String, dynamic>>> adminGetUsers({String q = '', int limit = 20, int offset = 0}) async {
+    final path = '/admin/users?q=${Uri.encodeComponent(q)}&limit=$limit&offset=$offset';
+    final data = await _get(path);
+    return ((data['data'] as List?) ?? []).cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> adminGetUser(String uid) async {
+    final data = await _get('/admin/users/$uid');
+    return (data['data'] as Map<String, dynamic>?) ?? {};
+  }
+
+  Future<void> adminEditUser(String uid, {
+    int? grantXp,
+    int? setLevel,
+    String? displayName,
+    int? grantCoins,
+  }) async {
+    final body = <String, dynamic>{};
+    if (grantXp != null) body['grant_xp'] = grantXp;
+    if (setLevel != null) body['set_level'] = setLevel;
+    if (displayName != null) body['display_name'] = displayName;
+    if (grantCoins != null) body['grant_coins'] = grantCoins;
+    await _patch('/admin/users/$uid', body);
+  }
+
+  Future<void> adminDeleteUser(String uid) async {
+    await _delete('/admin/users/$uid');
+  }
+
+  Future<void> adminBanUser(String uid, {String reason = ''}) async {
+    await _post('/admin/users/$uid/ban', {'reason': reason});
+  }
+
+  Future<void> adminUnbanUser(String uid) async {
+    await _post('/admin/users/$uid/unban', {});
+  }
+
+  Future<String> adminResetPassword(String uid) async {
+    final data = await _post('/admin/users/$uid/reset-password', {});
+    return (data['data']?['email'] ?? '').toString();
+  }
+
+  Future<List<Map<String, dynamic>>> adminGetContentCandidates({
+    String q = '',
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final path = '/admin/content/candidates?q=${Uri.encodeComponent(q)}&limit=$limit&offset=$offset';
+    final data = await _get(path);
+    return ((data['data'] as List?) ?? []).cast<Map<String, dynamic>>();
+  }
+
+  Future<List<Map<String, dynamic>>> adminGetCuratedContent({
+    int limit = 30,
+    int offset = 0,
+  }) async {
+    final data = await _get('/admin/content/curated?limit=$limit&offset=$offset');
+    return ((data['data'] as List?) ?? []).cast<Map<String, dynamic>>();
+  }
+
+  Future<void> adminCurateContent(String cardId, {String category = 'general'}) async {
+    await _post('/admin/content/curate', {'card_id': cardId, 'category': category});
+  }
+
+  Future<void> adminRemoveCurated(String id) async {
+    await _delete('/admin/content/curated/$id');
+  }
+
+  Future<List<Map<String, dynamic>>> adminGetLeaderboard({int limit = 10}) async {
+    final data = await _get('/admin/leaderboard?limit=$limit');
+    return ((data['data'] as List?) ?? []).cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> adminGetFarmStats() async {
+    final data = await _get('/admin/farm/stats');
+    return (data['data'] as Map<String, dynamic>?) ?? {};
+  }
+
+  Future<List<Map<String, dynamic>>> adminGetActivity({int days = 7}) async {
+    final data = await _get('/admin/activity?days=$days');
+    return ((data['data'] as List?) ?? []).cast<Map<String, dynamic>>();
+  }
+
+  Future<List<Map<String, dynamic>>> adminGetFlaggedSessions() async {
+    final data = await _get('/battle/admin/flagged');
+    final sessions = (data['data']?['flaggedSessions'] as List?) ?? [];
+    return sessions.cast<Map<String, dynamic>>();
+  }
+
+  Future<void> adminResolveSession(String sessionId, String action) async {
+    await _post('/battle/admin/resolve', {'sessionId': sessionId, 'action': action});
   }
 }

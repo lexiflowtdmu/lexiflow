@@ -63,15 +63,30 @@ class OcrBloc extends Bloc<OcrEvent, OcrState> {
         return;
       }
 
-      // Split text into list of clean words (remove punctuation)
+      // Split text into list of clean words (remove punctuation, preserve apostrophes & hyphens, deduplicate)
       final List<String> rawWords = recognizedText.text
           .replaceAll('\n', ' ')
           .split(RegExp(r'\s+'));
 
-      final List<String> cleanWords = rawWords
-          .map((w) => w.replaceAll(RegExp(r'[^\w\s\-]'), ''))
-          .where((w) => w.trim().isNotEmpty)
-          .toList();
+      final List<String> cleanWords = [];
+      final Set<String> seenWords = {};
+
+      for (var w in rawWords) {
+        var cleaned = w.replaceAll(RegExp(r"[^\w\s\-']"), '').trim();
+        // Strip leading/trailing hyphens and apostrophes
+        cleaned = cleaned.replaceAll(RegExp(r"^[\-']+|[\-']+$"), '');
+
+        // Skip if empty or purely numbers or non-alphabetical single character
+        if (cleaned.isEmpty) continue;
+        if (RegExp(r'^\d+$').hasMatch(cleaned)) continue;
+        if (cleaned.length == 1 && cleaned.toLowerCase() != 'i' && cleaned.toLowerCase() != 'a') continue;
+
+        final lower = cleaned.toLowerCase();
+        if (!seenWords.contains(lower)) {
+          seenWords.add(lower);
+          cleanWords.add(cleaned);
+        }
+      }
 
       emit(OcrSuccess(fullText: recognizedText.text, words: cleanWords));
     } catch (e) {

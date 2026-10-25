@@ -1,8 +1,9 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../core/theme/app_theme.dart';
+import 'package:lexiflow/core/theme/theme_extension.dart';
 
-class WordOfDayCard extends StatelessWidget {
+class WordOfDayCard extends StatefulWidget {
   final Map<String, String> wordOfTheDay;
   final ValueChanged<String> onTapWord;
 
@@ -13,31 +14,57 @@ class WordOfDayCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final word = wordOfTheDay['word'] ?? '';
-    final meaning = wordOfTheDay['meaning'] ?? '';
-    final example = wordOfTheDay['example'] ?? '';
+  State<WordOfDayCard> createState() => _WordOfDayCardState();
+}
 
-    final cardColor = AppTheme.cardColor(context);
-    final primaryColor = AppTheme.primaryColor(context);
-    final textColor = AppTheme.textColor(context);
-    final subTextColor = AppTheme.subTextColor(context);
-    final borderColor = AppTheme.borderColor(context);
-    final softBg = AppTheme.softBgColor(context);
+class _WordOfDayCardState extends State<WordOfDayCard> {
+  late final AudioPlayer _audioPlayer;
+  bool _playing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = AudioPlayer();
+    _audioPlayer.onPlayerStateChanged.listen((s) {
+      if (mounted) setState(() => _playing = s == PlayerState.playing);
+    });
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  Future<void> _playWord(String word) async {
+    if (word.isEmpty) return;
+    try {
+      await _audioPlayer.play(
+        UrlSource('https://dict.youdao.com/dictvoice?type=2&audio=$word'),
+      );
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final word = widget.wordOfTheDay['word'] ?? '';
+    final meaning = widget.wordOfTheDay['meaning'] ?? '';
+    final example = widget.wordOfTheDay['example'] ?? '';
+
 
     return InkWell(
-      onTap: () => onTapWord(word),
+      onTap: () => widget.onTapWord(word),
       borderRadius: BorderRadius.circular(20),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: cardColor,
+          color: context.cardColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: borderColor, width: 1),
+          border: Border.all(color: context.borderColor, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.03),
+              color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.03),
               blurRadius: 16,
               offset: const Offset(0, 4),
             )
@@ -54,19 +81,19 @@ class WordOfDayCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: primaryColor.withValues(alpha: 0.12),
+                        color: context.primaryColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.auto_awesome_rounded, size: 14, color: primaryColor),
+                          Icon(Icons.auto_awesome_rounded, size: 14, color: context.primaryColor),
                           const SizedBox(width: 4),
                           Text(
                             'Từ vựng hôm nay',
                             style: GoogleFonts.outfit(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: primaryColor,
+                              color: context.primaryColor,
                             ),
                           ),
                         ],
@@ -74,7 +101,24 @@ class WordOfDayCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                Icon(Icons.arrow_forward_ios_rounded, size: 14, color: subTextColor),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => _playWord(word),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: Icon(
+                          _playing ? Icons.volume_up_rounded : Icons.volume_up_outlined,
+                          key: ValueKey(_playing),
+                          size: 20,
+                          color: context.primaryColor,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(Icons.arrow_forward_ios_rounded, size: 14, color: context.subTextColor),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -83,7 +127,7 @@ class WordOfDayCard extends StatelessWidget {
               style: GoogleFonts.outfit(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: primaryColor,
+                color: context.primaryColor,
                 letterSpacing: -0.3,
               ),
             ),
@@ -93,7 +137,7 @@ class WordOfDayCard extends StatelessWidget {
               style: GoogleFonts.outfit(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: textColor,
+                color: context.textColor,
               ),
             ),
             if (example.isNotEmpty) ...[
@@ -102,7 +146,7 @@ class WordOfDayCard extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: softBg,
+                  color: context.softBgColor,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -110,7 +154,7 @@ class WordOfDayCard extends StatelessWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 13,
                     fontStyle: FontStyle.italic,
-                    color: subTextColor,
+                    color: context.subTextColor,
                   ),
                 ),
               ),

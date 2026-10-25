@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:audioplayers/audioplayers.dart';
-import '../../core/theme/app_theme.dart';
+import 'package:lexiflow/core/theme/theme_extension.dart';
 import '../bloc/search_bloc.dart';
 import '../bloc/flashcard_bloc.dart';
 
@@ -59,7 +59,7 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Đã lưu "$word" vào bộ nhớ Flashcard!'),
-        backgroundColor: AppTheme.primaryColor(context),
+        backgroundColor: context.primaryColor,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -67,19 +67,13 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = AppTheme.cardColor(context);
-    final textColor = AppTheme.textColor(context);
-    final subTextColor = AppTheme.subTextColor(context);
-    final borderColor = AppTheme.borderColor(context);
-    final primaryColor = AppTheme.primaryColor(context);
-    final softBg = AppTheme.softBgColor(context);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           widget.searchWord.toLowerCase(),
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.textColor),
         ),
         actions: [
           BlocBuilder<SearchBloc, SearchState>(
@@ -89,7 +83,7 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                 return IconButton(
                   icon: Icon(
                     isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                    color: isBookmarked ? primaryColor : subTextColor,
+                    color: isBookmarked ? context.primaryColor : context.subTextColor,
                   ),
                   onPressed: () {
                     context.read<SearchBloc>().add(
@@ -125,15 +119,15 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: softBg,
+                        color: context.softBgColor,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.sentiment_dissatisfied_rounded, size: 50, color: primaryColor),
+                      child: Icon(Icons.sentiment_dissatisfied_rounded, size: 50, color: context.primaryColor),
                     ),
                     const SizedBox(height: 16),
                     Text(
                       'Rất tiếc!',
-                      style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: textColor),
+                      style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: context.textColor),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -141,7 +135,7 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                           ? 'Không tìm thấy từ vựng "${widget.searchWord}" trong từ điển. Vui lòng kiểm tra lại chính tả.' 
                           : state.message,
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(color: subTextColor),
+                      style: GoogleFonts.outfit(color: context.subTextColor),
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton(
@@ -171,12 +165,12 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                           width: double.infinity,
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: cardColor,
+                            color: context.cardColor,
                             borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: borderColor, width: 1),
+                            border: Border.all(color: context.borderColor, width: 1),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.03),
+                                color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.03),
                                 blurRadius: 16,
                                 offset: const Offset(0, 4),
                               )
@@ -190,7 +184,7 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                                 style: GoogleFonts.outfit(
                                   fontSize: 36,
                                   fontWeight: FontWeight.bold,
-                                  color: primaryColor,
+                                  color: context.primaryColor,
                                   letterSpacing: -0.5,
                                 ),
                               ),
@@ -200,7 +194,7 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                                   word.phonetic,
                                   style: GoogleFonts.outfit(
                                     fontSize: 18,
-                                    color: subTextColor,
+                                    color: context.subTextColor,
                                     fontStyle: FontStyle.italic,
                                   ),
                                 ),
@@ -215,18 +209,18 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                                       decoration: BoxDecoration(
-                                        color: softBg,
+                                        color: context.softBgColor,
                                         borderRadius: BorderRadius.circular(30),
-                                        border: Border.all(color: borderColor),
+                                        border: Border.all(color: context.borderColor),
                                       ),
                                       child: Row(
                                         children: [
-                                          Icon(Icons.volume_up_rounded, color: primaryColor, size: 20),
+                                          Icon(Icons.volume_up_rounded, color: context.primaryColor, size: 20),
                                           const SizedBox(width: 8),
                                           Text(
                                             'Phát âm Anh/Mỹ',
                                             style: GoogleFonts.outfit(
-                                              color: primaryColor,
+                                              color: context.primaryColor,
                                               fontWeight: FontWeight.w600,
                                               fontSize: 14,
                                             ),
@@ -248,7 +242,7 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: textColor,
+                            color: context.textColor,
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -256,9 +250,9 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                           width: double.infinity,
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: softBg,
+                            color: context.softBgColor,
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
+                            border: Border.all(color: context.primaryColor.withValues(alpha: 0.2)),
                           ),
                           child: Text(
                             word.vietnameseTranslation.isNotEmpty
@@ -267,7 +261,7 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: primaryColor,
+                              color: context.primaryColor,
                             ),
                           ),
                         ),
@@ -279,7 +273,7 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: textColor,
+                            color: context.textColor,
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -293,9 +287,9 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                             return Container(
                               padding: const EdgeInsets.all(18),
                               decoration: BoxDecoration(
-                                color: cardColor,
+                                color: context.cardColor,
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: borderColor, width: 1),
+                                border: Border.all(color: context.borderColor, width: 1),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,7 +298,7 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: primaryColor.withValues(alpha: 0.12),
+                                      color: context.primaryColor.withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
@@ -312,7 +306,7 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                                       style: GoogleFonts.outfit(
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold,
-                                        color: primaryColor,
+                                        color: context.primaryColor,
                                       ),
                                     ),
                                   ),
@@ -323,7 +317,7 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                                     style: GoogleFonts.outfit(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600,
-                                      color: textColor,
+                                      color: context.textColor,
                                     ),
                                   ),
                                   // Definition Vietnamese
@@ -333,7 +327,7 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                                       '👉 ${def.vietnameseTranslation}',
                                       style: GoogleFonts.outfit(
                                         fontSize: 14,
-                                        color: primaryColor,
+                                        color: context.primaryColor,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -345,7 +339,7 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: softBg,
+                                        color: context.softBgColor,
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       child: Text(
@@ -353,7 +347,7 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                                         style: GoogleFonts.outfit(
                                           fontSize: 13,
                                           fontStyle: FontStyle.italic,
-                                          color: subTextColor,
+                                          color: context.subTextColor,
                                         ),
                                       ),
                                     ),
@@ -371,11 +365,11 @@ class _VocabDetailScreenState extends State<VocabDetailScreen> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: cardColor,
-                    border: Border(top: BorderSide(color: borderColor, width: 1)),
+                    color: context.cardColor,
+                    border: Border(top: BorderSide(color: context.borderColor, width: 1)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.05),
+                        color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, -4),
                       )

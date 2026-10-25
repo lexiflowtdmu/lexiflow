@@ -9,13 +9,14 @@ export const friendRoutes = new Hono<{ Bindings: Bindings; Variables: Variables 
  */
 friendRoutes.post('/request', async (c) => {
   try {
-    const body = await c.req.json<{ requesterUid: string; receiverUid: string }>();
+    const { uid: requesterUid } = c.get('auth');
+    const body = await c.req.json<{ receiverUid: string }>();
 
-    if (!body.requesterUid || !body.receiverUid) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing requesterUid or receiverUid' }, 400);
+    if (!body.receiverUid) {
+      return c.json<ApiResponse>({ success: false, error: 'Missing receiverUid' }, 400);
     }
 
-    if (body.requesterUid === body.receiverUid) {
+    if (requesterUid === body.receiverUid) {
       return c.json<ApiResponse>({ success: false, error: 'Cannot send friend request to yourself' }, 400);
     }
 
@@ -24,11 +25,11 @@ friendRoutes.post('/request', async (c) => {
     // Check if friendship or request already exists
     const existing = await db
       .prepare(
-        `SELECT * FROM friendships 
-         WHERE (requester_uid = ? AND receiver_uid = ?) 
+        `SELECT * FROM friendships
+         WHERE (requester_uid = ? AND receiver_uid = ?)
             OR (requester_uid = ? AND receiver_uid = ?)`
       )
-      .bind(body.requesterUid, body.receiverUid, body.receiverUid, body.requesterUid)
+      .bind(requesterUid, body.receiverUid, body.receiverUid, requesterUid)
       .first<Friendship>();
 
     if (existing) {
@@ -50,7 +51,7 @@ friendRoutes.post('/request', async (c) => {
            status = 'pending',
            updated_at = datetime('now')`
       )
-      .bind(id, body.requesterUid, body.receiverUid)
+      .bind(id, requesterUid, body.receiverUid)
       .run();
 
     return c.json<ApiResponse<{ message: string; id: string }>>({
@@ -68,13 +69,13 @@ friendRoutes.post('/request', async (c) => {
  */
 friendRoutes.post('/respond', async (c) => {
   try {
+    const { uid: receiverUid } = c.get('auth');
     const body = await c.req.json<{
       requesterUid: string;
-      receiverUid: string;
       action: 'accept' | 'reject' | 'block';
     }>();
 
-    if (!body.requesterUid || !body.receiverUid || !body.action) {
+    if (!body.requesterUid || !body.action) {
       return c.json<ApiResponse>({ success: false, error: 'Missing parameters' }, 400);
     }
 
@@ -87,21 +88,19 @@ friendRoutes.post('/respond', async (c) => {
     if (body.action === 'reject') {
       await db
         .prepare(
-          `DELETE FROM friendships 
-           WHERE (requester_uid = ? AND receiver_uid = ?) 
-              OR (requester_uid = ? AND receiver_uid = ?)`
+          `DELETE FROM friendships
+           WHERE requester_uid = ? AND receiver_uid = ?`
         )
-        .bind(body.requesterUid, body.receiverUid, body.receiverUid, body.requesterUid)
+        .bind(body.requesterUid, receiverUid)
         .run();
     } else {
       await db
         .prepare(
-          `UPDATE friendships 
+          `UPDATE friendships
            SET status = ?, updated_at = datetime('now')
-           WHERE (requester_uid = ? AND receiver_uid = ?) 
-              OR (requester_uid = ? AND receiver_uid = ?)`
+           WHERE requester_uid = ? AND receiver_uid = ?`
         )
-        .bind(newStatus, body.requesterUid, body.receiverUid, body.receiverUid, body.requesterUid)
+        .bind(newStatus, body.requesterUid, receiverUid)
         .run();
     }
 
@@ -120,10 +119,7 @@ friendRoutes.post('/respond', async (c) => {
  */
 friendRoutes.get('/list', async (c) => {
   try {
-    const uid = c.req.query('uid');
-    if (!uid) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing uid query parameter' }, 400);
-    }
+    const { uid } = c.get('auth');
 
     const db = c.env.DB;
 
@@ -159,10 +155,7 @@ friendRoutes.get('/list', async (c) => {
  */
 friendRoutes.get('/requests', async (c) => {
   try {
-    const uid = c.req.query('uid');
-    if (!uid) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing uid query parameter' }, 400);
-    }
+    const { uid } = c.get('auth');
 
     const db = c.env.DB;
 
@@ -191,19 +184,19 @@ friendRoutes.get('/requests', async (c) => {
  */
 friendRoutes.delete('/unfriend', async (c) => {
   try {
-    const uid1 = c.req.query('uid1');
+    const { uid: uid1 } = c.get('auth');
     const uid2 = c.req.query('uid2');
 
-    if (!uid1 || !uid2) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing uid1 or uid2 query parameters' }, 400);
+    if (!uid2) {
+      return c.json<ApiResponse>({ success: false, error: 'Missing uid2 query parameter' }, 400);
     }
 
     const db = c.env.DB;
 
     await db
       .prepare(
-        `DELETE FROM friendships 
-         WHERE (requester_uid = ? AND receiver_uid = ?) 
+        `DELETE FROM friendships
+         WHERE (requester_uid = ? AND receiver_uid = ?)
             OR (requester_uid = ? AND receiver_uid = ?)`
       )
       .bind(uid1, uid2, uid2, uid1)

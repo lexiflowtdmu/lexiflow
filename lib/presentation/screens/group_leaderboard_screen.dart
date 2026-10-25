@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/theme/app_theme.dart';
+import 'package:lexiflow/core/theme/app_theme.dart';
+import 'package:lexiflow/core/theme/theme_extension.dart';
 
 class GroupMemberItem {
   final String uid;
@@ -104,7 +105,7 @@ class _GroupLeaderboardScreenState extends State<GroupLeaderboardScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Đã sao chép mã mời nhóm: $code'),
-        backgroundColor: AppTheme.successGreen,
+        backgroundColor: context.successGreen,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -165,10 +166,6 @@ class _GroupLeaderboardScreenState extends State<GroupLeaderboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = AppTheme.textColor(context);
-    final subTextColor = AppTheme.subTextColor(context);
-    final primaryColor = AppTheme.primaryColor(context);
-    final cardColor = AppTheme.cardColor(context);
 
     final currentGroup = _groups[_selectedGroupIdx];
 
@@ -177,7 +174,7 @@ class _GroupLeaderboardScreenState extends State<GroupLeaderboardScreen> {
       appBar: AppBar(
         title: Text(
           'BXH Nhóm Học Tập',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.textColor),
         ),
         actions: [
           IconButton(
@@ -203,10 +200,10 @@ class _GroupLeaderboardScreenState extends State<GroupLeaderboardScreen> {
                   final g = _groups[idx];
                   final isSel = idx == _selectedGroupIdx;
                   return ChoiceChip(
-                    label: Text(g.name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: isSel ? Colors.white : textColor)),
+                    label: Text(g.name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: isSel ? Colors.white : context.textColor)),
                     selected: isSel,
-                    selectedColor: primaryColor,
-                    backgroundColor: cardColor,
+                    selectedColor: context.primaryColor,
+                    backgroundColor: context.cardColor,
                     onSelected: (_) => _selectGroup(idx),
                   );
                 },
@@ -218,9 +215,9 @@ class _GroupLeaderboardScreenState extends State<GroupLeaderboardScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: cardColor,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
+                border: Border.all(color: context.primaryColor.withValues(alpha: 0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,7 +228,7 @@ class _GroupLeaderboardScreenState extends State<GroupLeaderboardScreen> {
                       Expanded(
                         child: Text(
                           currentGroup.name,
-                          style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
+                          style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: context.textColor),
                         ),
                       ),
                       InkWell(
@@ -239,17 +236,17 @@ class _GroupLeaderboardScreenState extends State<GroupLeaderboardScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: primaryColor.withValues(alpha: 0.12),
+                            color: context.primaryColor.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Row(
                             children: [
                               Text(
                                 currentGroup.inviteCode,
-                                style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: primaryColor),
+                                style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: context.primaryColor),
                               ),
                               const SizedBox(width: 4),
-                              Icon(Icons.copy_rounded, size: 14, color: primaryColor),
+                              Icon(Icons.copy_rounded, size: 14, color: context.primaryColor),
                             ],
                           ),
                         ),
@@ -259,7 +256,7 @@ class _GroupLeaderboardScreenState extends State<GroupLeaderboardScreen> {
                   const SizedBox(height: 6),
                   Text(
                     currentGroup.description,
-                    style: GoogleFonts.outfit(fontSize: 13, color: subTextColor),
+                    style: GoogleFonts.outfit(fontSize: 13, color: context.subTextColor),
                   ),
                 ],
               ),
@@ -272,25 +269,25 @@ class _GroupLeaderboardScreenState extends State<GroupLeaderboardScreen> {
               children: [
                 Text(
                   'Bảng Xếp Hạng 🏆',
-                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
+                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: context.textColor),
                 ),
                 Row(
                   children: [
                     ChoiceChip(
                       label: Text('Tuần này', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold)),
                       selected: _isWeekly,
-                      selectedColor: primaryColor,
-                      labelStyle: TextStyle(color: _isWeekly ? Colors.white : textColor),
-                      backgroundColor: cardColor,
+                      selectedColor: context.primaryColor,
+                      labelStyle: TextStyle(color: _isWeekly ? Colors.white : context.textColor),
+                      backgroundColor: context.cardColor,
                       onSelected: (_) => setState(() => _isWeekly = true),
                     ),
                     const SizedBox(width: 6),
                     ChoiceChip(
                       label: Text('Tổng XP', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold)),
                       selected: !_isWeekly,
-                      selectedColor: primaryColor,
-                      labelStyle: TextStyle(color: !_isWeekly ? Colors.white : textColor),
-                      backgroundColor: cardColor,
+                      selectedColor: context.primaryColor,
+                      labelStyle: TextStyle(color: !_isWeekly ? Colors.white : context.textColor),
+                      backgroundColor: context.cardColor,
                       onSelected: (_) => setState(() => _isWeekly = false),
                     ),
                   ],
@@ -313,7 +310,7 @@ class _GroupLeaderboardScreenState extends State<GroupLeaderboardScreen> {
                 final isOnline = index % 2 == 0;
 
                 return Card(
-                  color: cardColor,
+                  color: context.cardColor,
                   margin: const EdgeInsets.only(bottom: 10),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   child: Padding(
@@ -332,9 +329,9 @@ class _GroupLeaderboardScreenState extends State<GroupLeaderboardScreen> {
                                 width: 12,
                                 height: 12,
                                 decoration: BoxDecoration(
-                                  color: isOnline ? AppTheme.successGreen : Colors.grey,
+                                  color: isOnline ? context.successGreen : Colors.grey,
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: cardColor, width: 2),
+                                  border: Border.all(color: context.cardColor, width: 2),
                                 ),
                               ),
                             ),
@@ -349,7 +346,7 @@ class _GroupLeaderboardScreenState extends State<GroupLeaderboardScreen> {
                                 children: [
                                   Text(
                                     member.displayName,
-                                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor),
+                                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.textColor),
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
@@ -357,14 +354,14 @@ class _GroupLeaderboardScreenState extends State<GroupLeaderboardScreen> {
                                     style: GoogleFonts.outfit(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
-                                      color: isOnline ? AppTheme.successGreen : subTextColor,
+                                      color: isOnline ? context.successGreen : context.subTextColor,
                                     ),
                                   ),
                                 ],
                               ),
                               Text(
                                 _isWeekly ? '🔥 ${member.streakDays}d · +${member.xp} XP tuần này' : '🔥 ${member.streakDays}d · +${member.xp} XP tổng',
-                                style: GoogleFonts.outfit(fontSize: 12, color: primaryColor, fontWeight: FontWeight.bold),
+                                style: GoogleFonts.outfit(fontSize: 12, color: context.primaryColor, fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),

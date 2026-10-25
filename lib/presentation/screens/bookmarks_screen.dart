@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../core/theme/app_theme.dart';
+import 'package:lexiflow/core/theme/theme_extension.dart';
 import '../../services/cloudflare_service.dart';
 import 'vocab_detail_screen.dart';
 import '../../core/utils/page_transitions.dart';
@@ -92,22 +92,16 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = AppTheme.cardColor(context);
-    final textColor = AppTheme.textColor(context);
-    final subTextColor = AppTheme.subTextColor(context);
-    final borderColor = AppTheme.borderColor(context);
-    final primaryColor = AppTheme.primaryColor(context);
-    final softBg = AppTheme.softBgColor(context);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('Từ Vựng Đã Lưu', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor)),
+        title: Text('Từ Vựng Đã Lưu', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.textColor)),
         actions: [
           IconButton(
             icon: Icon(
               _isAscending ? Icons.sort_by_alpha_rounded : Icons.sort_rounded,
-              color: primaryColor,
+              color: context.primaryColor,
             ),
             onPressed: () {
               setState(() {
@@ -126,12 +120,12 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
             // Search Input
             Container(
               decoration: BoxDecoration(
-                color: cardColor,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: borderColor, width: 1),
+                border: Border.all(color: context.borderColor, width: 1),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.03),
+                    color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.03),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   )
@@ -139,11 +133,11 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
               ),
               child: TextField(
                 controller: _searchController,
-                style: GoogleFonts.outfit(color: textColor),
+                style: GoogleFonts.outfit(color: context.textColor),
                 decoration: InputDecoration(
                   hintText: 'Tìm kiếm từ đã lưu...',
-                  hintStyle: GoogleFonts.outfit(color: subTextColor.withValues(alpha: 0.7)),
-                  prefixIcon: Icon(Icons.search_rounded, color: subTextColor),
+                  hintStyle: GoogleFonts.outfit(color: context.subTextColor.withValues(alpha: 0.7)),
+                  prefixIcon: Icon(Icons.search_rounded, color: context.subTextColor),
                   filled: true,
                   fillColor: Colors.transparent,
                   border: InputBorder.none,
@@ -162,20 +156,20 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.bookmark_border_rounded, size: 64, color: subTextColor),
+                              Icon(Icons.bookmark_border_rounded, size: 64, color: context.subTextColor),
                               const SizedBox(height: 16),
                               Text(
                                 'Chưa có từ vựng nào được lưu',
                                 style: GoogleFonts.outfit(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: textColor,
+                                  color: context.textColor,
                                 ),
                               ),
                               const SizedBox(height: 6),
                               Text(
                                 'Hãy tra cứu từ mới và bấm biểu tượng Bookmark để lưu.',
-                                style: GoogleFonts.outfit(color: subTextColor, fontSize: 13),
+                                style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 13),
                               ),
                             ],
                           ),
@@ -190,34 +184,34 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
 
                             return Container(
                               decoration: BoxDecoration(
-                                color: cardColor,
+                                color: context.cardColor,
                                 borderRadius: BorderRadius.circular(18),
-                                border: Border.all(color: borderColor, width: 1),
+                                border: Border.all(color: context.borderColor, width: 1),
                               ),
                               child: ListTile(
                                 leading: Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: softBg,
+                                    color: context.softBgColor,
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: Icon(Icons.star_rounded, color: primaryColor),
+                                  child: Icon(Icons.star_rounded, color: context.primaryColor),
                                 ),
                                 title: Text(
                                   word,
                                   style: GoogleFonts.outfit(
                                     fontWeight: FontWeight.bold,
-                                    color: textColor,
+                                    color: context.textColor,
                                   ),
                                 ),
                                 subtitle: Text(
                                   translation,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.outfit(color: subTextColor, fontSize: 13),
+                                  style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 13),
                                 ),
                                 trailing: IconButton(
-                                  icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.errorRed),
+                                  icon: Icon(Icons.delete_outline_rounded, color: context.errorRed),
                                   onPressed: () => _removeBookmark(word),
                                 ),
                                 onTap: () {

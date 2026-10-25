@@ -90,4 +90,6 @@ node_modules/
 .vibe/
 .windsurf/
 .zencoder/
+.codegraph/
+.grapuco/
 

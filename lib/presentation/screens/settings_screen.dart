@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../core/theme/app_theme.dart';
+import 'package:lexiflow/core/theme/app_theme.dart';
+import 'package:lexiflow/core/theme/theme_extension.dart';
 import '../../core/utils/page_transitions.dart';
 import '../../services/cloudflare_service.dart';
 import '../../services/notification_service.dart';
@@ -10,6 +11,7 @@ import '../../core/constants/daily_words.dart';
 import '../bloc/settings_cubit.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/search_bloc.dart';
+import 'admin_screen.dart';
 import 'auth_screen.dart';
 import 'bookmarks_screen.dart';
 
@@ -24,6 +26,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
   CloudflareService get _cloudflareService => context.read<CloudflareService>();
   bool _loadingStreak = true;
   int _streak = 0;
+  TimeOfDay _reminderTime = const TimeOfDay(hour: 9, minute: 0);
+  bool _reminderEnabled = true;
+
+  Future<void> _pickReminderTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _reminderTime,
+    );
+    if (picked != null) {
+      setState(() => _reminderTime = picked);
+      if (_reminderEnabled) {
+        final dailyWord = DailyWords.getWordOfTheDay();
+        await NotificationService().scheduleDailyNotification(
+          dailyWord['word']!,
+          dailyWord['meaning']!,
+          hour: picked.hour,
+          minute: picked.minute,
+          force: true,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Đã cập nhật giờ nhắc nhở thành ${picked.format(context)} hàng ngày!'),
+              backgroundColor: context.primaryColor,
+            ),
+          );
+        }
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -65,7 +97,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Xóa', style: TextStyle(color: AppTheme.errorRed)),
+            child: Text('Xóa', style: TextStyle(color: context.errorRed)),
           ),
         ],
       ),
@@ -98,7 +130,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Đăng xuất', style: TextStyle(color: AppTheme.errorRed)),
+            child: Text('Đăng xuất', style: TextStyle(color: context.errorRed)),
           ),
         ],
       ),
@@ -116,17 +148,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = AppTheme.cardColor(context);
-    final softBg = AppTheme.softBgColor(context);
-    final textColor = AppTheme.textColor(context);
-    final subColor = AppTheme.subTextColor(context);
-    final borderColor = AppTheme.borderColor(context);
-    final primaryColor = AppTheme.primaryColor(context);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('Cài đặt', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor)),
+        title: Text('Cài đặt', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.textColor)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -136,28 +162,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 12),
 
             // ── Section: Giao diện ──
-            _buildSectionHeader('Giao diện', subColor),
+            _buildSectionHeader('Giao diện', context.subTextColor),
             const SizedBox(height: 10),
             Container(
               decoration: BoxDecoration(
-                color: cardColor,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: borderColor, width: 1),
+                border: Border.all(color: context.borderColor, width: 1),
               ),
               child: BlocBuilder<SettingsCubit, SettingsState>(
                 builder: (context, settingsState) {
                   return SwitchListTile(
                     secondary: Icon(
                       context.read<SettingsCubit>().themeIcon,
-                      color: primaryColor,
+                      color: context.primaryColor,
                     ),
                     title: Text(
                       'Chế độ giao diện',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: textColor),
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: context.textColor),
                     ),
                     subtitle: Text(
                       context.read<SettingsCubit>().themeLabel,
-                      style: GoogleFonts.outfit(color: subColor, fontSize: 13),
+                      style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 13),
                     ),
                     value: settingsState.themeMode != AppThemeMode.light,
                     onChanged: (_) => context.read<SettingsCubit>().toggleTheme(),
@@ -168,13 +194,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 24),
 
             // ── Section: Học tập ──
-            _buildSectionHeader('Học tập', subColor),
+            _buildSectionHeader('Học tập', context.subTextColor),
             const SizedBox(height: 10),
             Container(
               decoration: BoxDecoration(
-                color: cardColor,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: borderColor, width: 1),
+                border: Border.all(color: context.borderColor, width: 1),
               ),
               child: Column(
                 children: [
@@ -185,25 +211,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         secondary: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: softBg,
+                            color: context.softBgColor,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(Icons.volume_up_rounded, color: primaryColor, size: 24),
+                          child: Icon(Icons.volume_up_rounded, color: context.primaryColor, size: 24),
                         ),
                         title: Text(
                           'Tự động phát âm khi lật thẻ',
-                          style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: textColor),
+                          style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: context.textColor),
                         ),
                         subtitle: Text(
                           'Tự động phát âm thanh khi lật mặt sau thẻ từ vựng',
-                          style: GoogleFonts.outfit(color: subColor, fontSize: 13),
+                          style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 13),
                         ),
                         value: settingsState.autoPlayAudio,
                         onChanged: (_) => context.read<SettingsCubit>().toggleAutoPlayAudio(),
                       );
                     },
                   ),
-                  Divider(height: 1, indent: 72, color: borderColor),
+                  Divider(height: 1, indent: 72, color: context.borderColor),
                   // Streak Info
                   ListTile(
                     leading: Container(
@@ -216,13 +242,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     title: Text(
                       'Chuỗi học tập',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: textColor),
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: context.textColor),
                     ),
                     subtitle: _loadingStreak
-                        ? Text('Đang tải...', style: GoogleFonts.outfit(color: subColor, fontSize: 13))
+                        ? Text('Đang tải...', style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 13))
                         : Text(
                             _streak > 0 ? '$_streak ngày liên tiếp' : 'Bắt đầu học ngay!',
-                            style: GoogleFonts.outfit(color: subColor, fontSize: 13),
+                            style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 13),
                           ),
                     trailing: _streak > 0
                         ? Container(
@@ -248,13 +274,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 24),
 
             // ── Section: Dữ liệu ──
-            _buildSectionHeader('Dữ liệu', subColor),
+            _buildSectionHeader('Dữ liệu', context.subTextColor),
             const SizedBox(height: 10),
             Container(
               decoration: BoxDecoration(
-                color: cardColor,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: borderColor, width: 1),
+                border: Border.all(color: context.borderColor, width: 1),
               ),
               child: Column(
                 children: [
@@ -263,20 +289,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     leading: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: softBg,
+                        color: context.softBgColor,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.bookmark_rounded, color: primaryColor, size: 24),
+                      child: Icon(Icons.bookmark_rounded, color: context.primaryColor, size: 24),
                     ),
                     title: Text(
                       'Từ vựng đã lưu',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: textColor),
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: context.textColor),
                     ),
                     subtitle: Text(
                       'Xem danh sách từ vựng đã bookmark',
-                      style: GoogleFonts.outfit(color: subColor, fontSize: 13),
+                      style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 13),
                     ),
-                    trailing: Icon(Icons.arrow_forward_ios_rounded, size: 14, color: subColor),
+                    trailing: Icon(Icons.arrow_forward_ios_rounded, size: 14, color: context.subTextColor),
                     onTap: () {
                       Navigator.push(
                         context,
@@ -284,24 +310,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       );
                     },
                   ),
-                  Divider(height: 1, indent: 72, color: borderColor),
+                  Divider(height: 1, indent: 72, color: context.borderColor),
                   // Clear History
                   ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppTheme.errorRed.withValues(alpha: 0.1),
+                        color: context.errorRed.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.delete_sweep_rounded, color: AppTheme.errorRed, size: 24),
+                      child: Icon(Icons.delete_sweep_rounded, color: context.errorRed, size: 24),
                     ),
                     title: Text(
                       'Xóa lịch sử tra từ',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: textColor),
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: context.textColor),
                     ),
                     subtitle: Text(
                       'Xóa tất cả lịch sử tra cứu từ điển',
-                      style: GoogleFonts.outfit(color: subColor, fontSize: 13),
+                      style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 13),
                     ),
                     onTap: _clearAllHistory,
                   ),
@@ -311,92 +337,158 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 24),
 
             // ── Section: Thông báo ──
-            _buildSectionHeader('Thông báo', subColor),
+            _buildSectionHeader('Thông báo nhắc nhở', context.subTextColor),
             const SizedBox(height: 10),
             Container(
               decoration: BoxDecoration(
-                color: cardColor,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: borderColor, width: 1),
+                border: Border.all(color: context.borderColor, width: 1),
               ),
-              child: ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: softBg,
-                    borderRadius: BorderRadius.circular(12),
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    secondary: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: context.softBgColor,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(Icons.notifications_active_rounded, color: context.primaryColor, size: 24),
+                    ),
+                    title: Text(
+                      'Bật thông báo mỗi ngày',
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: context.textColor),
+                    ),
+                    subtitle: Text(
+                      _reminderEnabled ? 'Đang bật nhắc học từ vựng' : 'Đã tắt nhắc nhở',
+                      style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 13),
+                    ),
+                    value: _reminderEnabled,
+                    onChanged: (val) async {
+                      setState(() => _reminderEnabled = val);
+                      if (val) {
+                        final dailyWord = DailyWords.getWordOfTheDay();
+                        await NotificationService().scheduleDailyNotification(
+                          dailyWord['word']!,
+                          dailyWord['meaning']!,
+                          hour: _reminderTime.hour,
+                          minute: _reminderTime.minute,
+                          force: true,
+                        );
+                      } else {
+                        await NotificationService().cancelDailyNotification();
+                      }
+                    },
                   ),
-                  child: Icon(Icons.notifications_rounded, color: primaryColor, size: 24),
-                ),
-                title: Text(
-                  'Nhắc nhở hàng ngày',
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: textColor),
-                ),
-                subtitle: Text(
-                  '9:00 AM — Mỗi ngày học 1 từ vựng',
-                  style: GoogleFonts.outfit(color: subColor, fontSize: 13),
-                ),
-                trailing: ElevatedButton.icon(
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: const Text('Lên lịch lại'),
-                  onPressed: () async {
-                    final messenger = ScaffoldMessenger.of(context);
-                    final notificationService = NotificationService();
-                    final dailyWord = DailyWords.getWordOfTheDay();
-                    await notificationService.scheduleDailyNotification(
-                      dailyWord['word']!,
-                      dailyWord['meaning']!,
-                    );
-                    if (mounted) {
-                      messenger.showSnackBar(
-                        const SnackBar(content: Text('Đã lên lịch thông báo từ vựng hàng ngày.')),
-                      );
-                    }
-                  },
-                ),
+                  if (_reminderEnabled) ...[
+                    Divider(height: 1, indent: 72, color: context.borderColor),
+                    ListTile(
+                      leading: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: context.softBgColor,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.access_time_rounded, color: context.primaryColor, size: 24),
+                      ),
+                      title: Text(
+                        'Thời gian nhắc nhở',
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: context.textColor),
+                      ),
+                      subtitle: Text(
+                        'Nhắc lúc ${_reminderTime.format(context)}',
+                        style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 13),
+                      ),
+                      trailing: TextButton.icon(
+                        icon: const Icon(Icons.edit_outlined, size: 16),
+                        label: const Text('Thay đổi'),
+                        onPressed: _pickReminderTime,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             const SizedBox(height: 24),
 
             // ── Section: Tài khoản ──
-            _buildSectionHeader('Tài khoản', subColor),
+            _buildSectionHeader('Tài khoản', context.subTextColor),
             const SizedBox(height: 10),
             Container(
               decoration: BoxDecoration(
-                color: cardColor,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: borderColor, width: 1),
+                border: Border.all(color: context.borderColor, width: 1),
               ),
-              child: ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppTheme.errorRed.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+              child: Column(
+                children: [
+                  // Admin Panel — only shown to admin users (checked client-side for UX;
+                  // server enforces 403 for non-admins regardless)
+                  if (FirebaseAuth.instance.currentUser != null) ...[
+                    ListTile(
+                      leading: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: context.primaryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.admin_panel_settings_rounded,
+                            color: context.primaryColor, size: 24),
+                      ),
+                      title: Text(
+                        'Admin Panel',
+                        style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.w600, color: context.textColor),
+                      ),
+                      subtitle: Text(
+                        'Quản lý hệ thống, người dùng và kiểm duyệt',
+                        style: GoogleFonts.outfit(
+                            color: context.subTextColor, fontSize: 13),
+                      ),
+                      trailing: Icon(Icons.arrow_forward_ios_rounded,
+                          size: 14, color: context.subTextColor),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          SlidePageRoute(page: const AdminScreen()),
+                        );
+                      },
+                    ),
+                    Divider(height: 1, indent: 72, color: context.borderColor),
+                  ],
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: context.errorRed.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(Icons.logout_rounded, color: context.errorRed, size: 24),
+                    ),
+                    title: Text(
+                      'Đăng xuất',
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: context.textColor),
+                    ),
+                    subtitle: Text(
+                      'Đăng xuất khỏi tài khoản hiện tại',
+                      style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 13),
+                    ),
+                    onTap: _logout,
                   ),
-                  child: const Icon(Icons.logout_rounded, color: AppTheme.errorRed, size: 24),
-                ),
-                title: Text(
-                  'Đăng xuất',
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: textColor),
-                ),
-                subtitle: Text(
-                  'Đăng xuất khỏi tài khoản hiện tại',
-                  style: GoogleFonts.outfit(color: subColor, fontSize: 13),
-                ),
-                onTap: _logout,
+                ],
               ),
             ),
             const SizedBox(height: 24),
 
             // ── Section: Về ứng dụng ──
-            _buildSectionHeader('Về ứng dụng', subColor),
+            _buildSectionHeader('Về ứng dụng', context.subTextColor),
             const SizedBox(height: 10),
             Container(
               decoration: BoxDecoration(
-                color: cardColor,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: borderColor, width: 1),
+                border: Border.all(color: context.borderColor, width: 1),
               ),
               child: Column(
                 children: [
@@ -404,37 +496,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     leading: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: softBg,
+                        color: context.softBgColor,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.menu_book_rounded, color: primaryColor, size: 24),
+                      child: Icon(Icons.menu_book_rounded, color: context.primaryColor, size: 24),
                     ),
                     title: Text(
                       'LexiFlow',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor, fontSize: 16),
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.textColor, fontSize: 16),
                     ),
                     subtitle: Text(
                       'Phiên bản 1.0.0+1',
-                      style: GoogleFonts.outfit(color: subColor, fontSize: 13),
+                      style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 13),
                     ),
                   ),
-                  Divider(height: 1, indent: 72, color: borderColor),
+                  Divider(height: 1, indent: 72, color: context.borderColor),
                   ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: softBg,
+                        color: context.softBgColor,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.info_outline_rounded, color: primaryColor, size: 24),
+                      child: Icon(Icons.info_outline_rounded, color: context.primaryColor, size: 24),
                     ),
                     title: Text(
                       'Công nghệ',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: textColor),
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: context.textColor),
                     ),
                     subtitle: Text(
                       'Flutter • Firebase • SM-2 Algorithm • Google ML Kit • Oxford Dictionary API',
-                      style: GoogleFonts.outfit(color: subColor, fontSize: 12),
+                      style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 12),
                     ),
                   ),
                 ],

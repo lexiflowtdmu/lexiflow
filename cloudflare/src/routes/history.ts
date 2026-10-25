@@ -4,6 +4,7 @@
 
 import { Hono } from 'hono';
 import type { AuthContext, Bindings, Variables } from '../types';
+import { sanitizeString, getValidWordParam } from '../utils/sanitize';
 
 const history = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -36,7 +37,7 @@ history.post('/', async (c) => {
   try {
     const body = await c.req.json<{ word?: string; translation?: string }>();
     const word = (body.word ?? '').trim().toLowerCase();
-    const translation = body.translation ?? '';
+    const translation = sanitizeString(body.translation ?? '', 2000);
 
     if (!word) {
       return c.json({ success: false, error: 'Từ vựng không được để trống.' }, 400);
@@ -86,9 +87,9 @@ history.delete('/', async (c) => {
 history.delete('/:word', async (c) => {
   const { uid } = c.get('auth');
   const db = c.env.DB;
-  const word = decodeURIComponent(c.req.param('word')).trim().toLowerCase();
+  const word = getValidWordParam(c);
 
-  if (!word || word.length === 0) {
+  if (!word) {
     return c.json({ success: false, error: 'Từ vựng không hợp lệ.' }, 400);
   }
 

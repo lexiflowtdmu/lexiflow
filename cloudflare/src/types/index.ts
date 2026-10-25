@@ -12,6 +12,7 @@ export interface AuthContext {
 export interface Bindings {
   DB: D1Database;
   FIREBASE_PROJECT_ID: string;
+  ADMIN_UIDS?: string; // Comma-separated list of admin UIDs for privileged endpoints
 }
 
 /** Variables attached to Hono context by auth middleware */
@@ -116,5 +117,6 @@ export interface FriendUser {
 export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
+  message?: string;
   error?: string;
 }

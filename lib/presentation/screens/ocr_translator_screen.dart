@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/theme/app_theme.dart';
+import 'package:lexiflow/core/theme/theme_extension.dart';
 import '../bloc/ocr_bloc.dart';
 import '../bloc/search_bloc.dart';
 import 'vocab_detail_screen.dart';
@@ -93,16 +93,11 @@ class _OcrTranslatorScreenState extends State<OcrTranslatorScreen> {
     // Search the tapped word
     context.read<SearchBloc>().add(SearchWordSubmitted(word));
 
-    final cardColor = AppTheme.cardColor(context);
-    final textColor = AppTheme.textColor(context);
-    final subTextColor = AppTheme.subTextColor(context);
-    final primaryColor = AppTheme.primaryColor(context);
-    final softBg = AppTheme.softBgColor(context);
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: cardColor,
+      backgroundColor: context.cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -119,14 +114,14 @@ class _OcrTranslatorScreenState extends State<OcrTranslatorScreen> {
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.sentiment_dissatisfied_rounded, size: 48, color: primaryColor),
+                    Icon(Icons.sentiment_dissatisfied_rounded, size: 48, color: context.primaryColor),
                     const SizedBox(height: 12),
                     Text(
                       'Không tìm thấy từ vựng',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: textColor),
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: context.textColor),
                     ),
                     const SizedBox(height: 8),
-                    Text('Từ "$word" không được hỗ trợ giải nghĩa lúc này.', style: GoogleFonts.outfit(color: subTextColor)),
+                    Text('Từ "$word" không được hỗ trợ giải nghĩa lúc này.', style: GoogleFonts.outfit(color: context.subTextColor)),
                   ],
                 );
               }
@@ -140,10 +135,10 @@ class _OcrTranslatorScreenState extends State<OcrTranslatorScreen> {
                       children: [
                         Text(
                           dWord.word,
-                          style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: primaryColor),
+                          style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: context.primaryColor),
                         ),
                         IconButton(
-                          icon: Icon(Icons.open_in_new_rounded, color: primaryColor),
+                          icon: Icon(Icons.open_in_new_rounded, color: context.primaryColor),
                           onPressed: () {
                             Navigator.pop(context); // Close sheet
                             Navigator.push(
@@ -158,24 +153,24 @@ class _OcrTranslatorScreenState extends State<OcrTranslatorScreen> {
                     ),
                     if (dWord.phonetic.isNotEmpty) ...[
                       const SizedBox(height: 4),
-                      Text(dWord.phonetic, style: GoogleFonts.outfit(color: subTextColor, fontStyle: FontStyle.italic)),
+                      Text(dWord.phonetic, style: GoogleFonts.outfit(color: context.subTextColor, fontStyle: FontStyle.italic)),
                     ],
                     const SizedBox(height: 16),
                     Text(
                       'Dịch nghĩa:',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor),
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.textColor),
                     ),
                     const SizedBox(height: 6),
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: softBg,
+                        color: context.softBgColor,
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Text(
                         dWord.vietnameseTranslation,
-                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: primaryColor),
+                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: context.primaryColor),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -190,13 +185,13 @@ class _OcrTranslatorScreenState extends State<OcrTranslatorScreen> {
                             children: [
                               Text(
                                 '[${def.partOfSpeech.toUpperCase()}] ${def.definition}',
-                                style: GoogleFonts.outfit(fontSize: 14, color: textColor, fontWeight: FontWeight.w600),
+                                style: GoogleFonts.outfit(fontSize: 14, color: context.textColor, fontWeight: FontWeight.w600),
                               ),
                               if (def.example.isNotEmpty) ...[
                                 const SizedBox(height: 4),
                                 Text(
                                   'Ví dụ: "${def.example}"',
-                                  style: GoogleFonts.outfit(fontSize: 13, color: subTextColor, fontStyle: FontStyle.italic),
+                                  style: GoogleFonts.outfit(fontSize: 13, color: context.subTextColor, fontStyle: FontStyle.italic),
                                 ),
                               ],
                             ],
@@ -217,10 +212,6 @@ class _OcrTranslatorScreenState extends State<OcrTranslatorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = AppTheme.cardColor(context);
-    final textColor = AppTheme.textColor(context);
-    final subTextColor = AppTheme.subTextColor(context);
-    final primaryColor = AppTheme.primaryColor(context);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -275,7 +266,7 @@ class _OcrTranslatorScreenState extends State<OcrTranslatorScreen> {
                     height: 160,
                     width: MediaQuery.of(context).size.width * 0.8,
                     decoration: BoxDecoration(
-                      border: Border.all(color: primaryColor, width: 3),
+                      border: Border.all(color: context.primaryColor, width: 3),
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
@@ -340,7 +331,7 @@ class _OcrTranslatorScreenState extends State<OcrTranslatorScreen> {
                               color: Colors.white,
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(Icons.camera_rounded, size: 36, color: primaryColor),
+                            child: Icon(Icons.camera_rounded, size: 36, color: context.primaryColor),
                           ),
                         ),
                       ),
@@ -377,7 +368,7 @@ class _OcrTranslatorScreenState extends State<OcrTranslatorScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline_rounded, color: AppTheme.errorRed, size: 64),
+                    Icon(Icons.error_outline_rounded, color: context.errorRed, size: 64),
                     const SizedBox(height: 16),
                     Text(
                       state.message,
@@ -407,13 +398,13 @@ class _OcrTranslatorScreenState extends State<OcrTranslatorScreen> {
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: textColor,
+                      color: context.textColor,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Chạm vào từ bất kỳ để tra từ điển tức thì',
-                    style: GoogleFonts.outfit(fontSize: 13, color: subTextColor),
+                    style: GoogleFonts.outfit(fontSize: 13, color: context.subTextColor),
                   ),
                   const SizedBox(height: 20),
                   // Word cloud chips
@@ -429,16 +420,16 @@ class _OcrTranslatorScreenState extends State<OcrTranslatorScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                               decoration: BoxDecoration(
-                                color: cardColor,
+                                color: context.cardColor,
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
+                                border: Border.all(color: context.primaryColor.withValues(alpha: 0.3)),
                               ),
                               child: Text(
                                 word,
                                 style: GoogleFonts.outfit(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: primaryColor,
+                                  color: context.primaryColor,
                                 ),
                               ),
                             ),

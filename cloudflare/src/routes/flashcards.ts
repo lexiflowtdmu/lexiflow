@@ -143,28 +143,23 @@ flashcards.post('/catch-up/reschedule', async (c) => {
       .all<{ id: string }>();
 
     const backlogCards = overdueResult.results || [];
-    let rescheduledCount = 0;
 
-    for (let i = 0; i < backlogCards.length; i++) {
-      const card = backlogCards[i];
-      // Spread across 1..spreadDays
-      const dayOffset = (i % spreadDays) + 1;
-      await db
-        .prepare(
+    if (backlogCards.length > 0) {
+      const batchUpdates = backlogCards.map((card, i) => {
+        const dayOffset = (i % spreadDays) + 1;
+        return db.prepare(
           `UPDATE flashcards
            SET next_review = datetime('now', '+' || ? || ' days'),
                updated_at = datetime('now')
            WHERE id = ? AND uid = ?`
-        )
-        .bind(dayOffset, card.id, uid)
-        .run();
-
-      rescheduledCount++;
+        ).bind(dayOffset, card.id, uid);
+      });
+      await db.batch(batchUpdates);
     }
 
     return c.json({
       success: true,
-      rescheduled_count: rescheduledCount,
+      rescheduled_count: backlogCards.length,
       spread_days: spreadDays
     });
   } catch (error) {

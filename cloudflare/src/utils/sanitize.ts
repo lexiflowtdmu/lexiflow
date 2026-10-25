@@ -34,14 +34,15 @@ export function sanitizeWord(input: string): string {
   return sanitized.replace(/[^\p{L}\p{N}\s\-'']/gu, '').trim();
 }
 
+import type { Context } from 'hono';
+
 /**
- * Check if a string is safe for database storage
+ * Extracts and decodes a word parameter from the request URL, ensuring it is valid.
+ * Returns null if the word is missing or empty.
  */
-export function isValidInput(input: string, minLength: number = 1, maxLength: number = 1000): boolean {
-  if (typeof input !== 'string') {
-    return false;
-  }
-  
-  const length = input.trim().length;
-  return length >= minLength && length <= maxLength;
+export function getValidWordParam(c: Context, paramName: string = 'word'): string | null {
+  const param = c.req.param(paramName);
+  if (!param) return null;
+  const word = decodeURIComponent(param).trim().toLowerCase();
+  return word.length > 0 ? word : null;
 }

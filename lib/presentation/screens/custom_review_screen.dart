@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flip_card/flip_card.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:audioplayers/audioplayers.dart';
-import '../../core/theme/app_theme.dart';
+import 'package:lexiflow/core/theme/theme_extension.dart';
 import '../../data/models/vocab_model.dart';
 import '../bloc/flashcard_bloc.dart';
 import '../bloc/settings_cubit.dart';
@@ -23,6 +23,7 @@ class _CustomReviewScreenState extends State<CustomReviewScreen> {
   int _currentIndex = 0;
   int _rememberedCount = 0;
   int _reviewCount = 0;
+  bool _isCardRevealed = false;
 
   final List<String> _categories = [
     'Tất cả',
@@ -74,6 +75,7 @@ class _CustomReviewScreenState extends State<CustomReviewScreen> {
     }
 
     setState(() {
+      _isCardRevealed = false;
       _reviewCount++;
       if (remembered) _rememberedCount++;
       if (_currentIndex < list.length - 1) {
@@ -86,12 +88,6 @@ class _CustomReviewScreenState extends State<CustomReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = AppTheme.cardColor(context);
-    final textColor = AppTheme.textColor(context);
-    final subTextColor = AppTheme.subTextColor(context);
-    final borderColor = AppTheme.borderColor(context);
-    final primaryColor = AppTheme.primaryColor(context);
-    final softBg = AppTheme.softBgColor(context);
     final isAutoPlay = context.watch<SettingsCubit>().state.autoPlayAudio;
 
     return Scaffold(
@@ -103,7 +99,7 @@ class _CustomReviewScreenState extends State<CustomReviewScreen> {
             const SizedBox(width: 6),
             Text(
               'Ôn Tập Cấp Tốc',
-              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor),
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.textColor),
             ),
           ],
         ),
@@ -130,17 +126,17 @@ class _CustomReviewScreenState extends State<CustomReviewScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.style_outlined, size: 64, color: subTextColor),
+                    Icon(Icons.style_outlined, size: 64, color: context.subTextColor),
                     const SizedBox(height: 16),
                     Text(
                       'Chưa có từ vựng nào',
-                      style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
+                      style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: context.textColor),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Hãy tra từ hoặc import từ bộ thẻ chia sẻ để bắt đầu ôn tập cấp tốc.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(color: subTextColor),
+                      style: GoogleFonts.outfit(color: context.subTextColor),
                     ),
                   ],
                 ),
@@ -173,7 +169,7 @@ class _CustomReviewScreenState extends State<CustomReviewScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.isDark(context) ? Colors.amber.shade200 : Colors.amber.shade900,
+                            color: context.isDark ? Colors.amber.shade200 : Colors.amber.shade900,
                           ),
                         ),
                       ),
@@ -195,9 +191,9 @@ class _CustomReviewScreenState extends State<CustomReviewScreen> {
                       return ChoiceChip(
                         label: Text(cat, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600)),
                         selected: isSelected,
-                        selectedColor: primaryColor,
-                        labelStyle: TextStyle(color: isSelected ? Colors.white : textColor),
-                        backgroundColor: cardColor,
+                        selectedColor: context.primaryColor,
+                        labelStyle: TextStyle(color: isSelected ? Colors.white : context.textColor),
+                        backgroundColor: context.cardColor,
                         onSelected: (selected) {
                           if (selected) {
                             setState(() {
@@ -218,11 +214,11 @@ class _CustomReviewScreenState extends State<CustomReviewScreen> {
                   children: [
                     Text(
                       'Tiến trình cấp tốc',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: subTextColor),
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: context.subTextColor),
                     ),
                     Text(
                       '${vocabs.isEmpty ? 0 : (_currentIndex >= vocabs.length ? vocabs.length : _currentIndex + 1)} / ${vocabs.length}',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: primaryColor),
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.primaryColor),
                     ),
                   ],
                 ),
@@ -231,8 +227,8 @@ class _CustomReviewScreenState extends State<CustomReviewScreen> {
                   borderRadius: BorderRadius.circular(8),
                   child: LinearProgressIndicator(
                     value: vocabs.isEmpty ? 0 : (_currentIndex / vocabs.length).clamp(0.0, 1.0),
-                    backgroundColor: borderColor,
-                    valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                    backgroundColor: context.borderColor,
+                    valueColor: AlwaysStoppedAnimation<Color>(context.primaryColor),
                     minHeight: 6,
                   ),
                 ),
@@ -245,9 +241,9 @@ class _CustomReviewScreenState extends State<CustomReviewScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(28),
                             decoration: BoxDecoration(
-                              color: cardColor,
+                              color: context.cardColor,
                               borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: borderColor),
+                              border: Border.all(color: context.borderColor),
                             ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -256,13 +252,13 @@ class _CustomReviewScreenState extends State<CustomReviewScreen> {
                                 const SizedBox(height: 16),
                                 Text(
                                   'Hoàn thành phiên ôn tập!',
-                                  style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: textColor),
+                                  style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: context.textColor),
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
                                   'Bạn đã luyện tập $_reviewCount lượt. Số câu nhớ tốt: $_rememberedCount / $_reviewCount',
                                   textAlign: TextAlign.center,
-                                  style: GoogleFonts.outfit(color: subTextColor, fontSize: 14),
+                                  style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 14),
                                 ),
                                 const SizedBox(height: 24),
                                 ElevatedButton.icon(
@@ -284,6 +280,9 @@ class _CustomReviewScreenState extends State<CustomReviewScreen> {
                           key: _cardKey,
                           direction: FlipDirection.HORIZONTAL,
                           onFlipDone: (isFront) {
+                            setState(() {
+                              _isCardRevealed = !isFront;
+                            });
                             if (!isFront && isAutoPlay) {
                               _playAudio(vocabs[_currentIndex].word);
                             }
@@ -292,12 +291,12 @@ class _CustomReviewScreenState extends State<CustomReviewScreen> {
                             width: double.infinity,
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
-                              color: cardColor,
+                              color: context.cardColor,
                               borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: borderColor, width: 1.5),
+                              border: Border.all(color: context.borderColor, width: 1.5),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.04),
+                                  color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
                                   blurRadius: 16,
                                   offset: const Offset(0, 8),
                                 ),
@@ -311,29 +310,29 @@ class _CustomReviewScreenState extends State<CustomReviewScreen> {
                                   style: GoogleFonts.outfit(
                                     fontSize: 36,
                                     fontWeight: FontWeight.bold,
-                                    color: primaryColor,
+                                    color: context.primaryColor,
                                   ),
                                 ),
                                 const SizedBox(height: 16),
                                 IconButton(
-                                  icon: Icon(Icons.volume_up_rounded, color: primaryColor, size: 28),
+                                  icon: Icon(Icons.volume_up_rounded, color: context.primaryColor, size: 28),
                                   onPressed: () => _playAudio(vocabs[_currentIndex].word),
                                 ),
                                 const SizedBox(height: 24),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                   decoration: BoxDecoration(
-                                    color: softBg,
+                                    color: context.softBgColor,
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.touch_app_rounded, color: subTextColor, size: 16),
+                                      Icon(Icons.touch_app_rounded, color: context.subTextColor, size: 16),
                                       const SizedBox(width: 6),
                                       Text(
                                         'Chạm để lật xem đáp án',
-                                        style: GoogleFonts.outfit(color: subTextColor, fontSize: 13, fontWeight: FontWeight.w600),
+                                        style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 13, fontWeight: FontWeight.w600),
                                       ),
                                     ],
                                   ),
@@ -345,16 +344,16 @@ class _CustomReviewScreenState extends State<CustomReviewScreen> {
                             width: double.infinity,
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
-                              color: softBg,
+                              color: context.softBgColor,
                               borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: primaryColor.withValues(alpha: 0.3), width: 1.5),
+                              border: Border.all(color: context.primaryColor.withValues(alpha: 0.3), width: 1.5),
                             ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
                                   vocabs[_currentIndex].word,
-                                  style: GoogleFonts.outfit(fontSize: 20, color: subTextColor, fontWeight: FontWeight.w600),
+                                  style: GoogleFonts.outfit(fontSize: 20, color: context.subTextColor, fontWeight: FontWeight.w600),
                                 ),
                                 const SizedBox(height: 12),
                                 Text(
@@ -363,7 +362,7 @@ class _CustomReviewScreenState extends State<CustomReviewScreen> {
                                   style: GoogleFonts.outfit(
                                     fontSize: 26,
                                     fontWeight: FontWeight.bold,
-                                    color: primaryColor,
+                                    color: context.primaryColor,
                                   ),
                                 ),
                                 if (vocabs[_currentIndex].example.isNotEmpty) ...[
@@ -371,13 +370,13 @@ class _CustomReviewScreenState extends State<CustomReviewScreen> {
                                   Container(
                                     padding: const EdgeInsets.all(14),
                                     decoration: BoxDecoration(
-                                      color: cardColor,
+                                      color: context.cardColor,
                                       borderRadius: BorderRadius.circular(14),
-                                      border: Border.all(color: borderColor),
+                                      border: Border.all(color: context.borderColor),
                                     ),
                                     child: Text(
                                       '"${vocabs[_currentIndex].example}"',
-                                      style: GoogleFonts.outfit(fontSize: 13.5, fontStyle: FontStyle.italic, color: textColor),
+                                      style: GoogleFonts.outfit(fontSize: 13.5, fontStyle: FontStyle.italic, color: context.textColor),
                                     ),
                                   ),
                                 ],
@@ -390,33 +389,49 @@ class _CustomReviewScreenState extends State<CustomReviewScreen> {
 
                 // Practice Navigation Controls
                 if (vocabs.isNotEmpty && _currentIndex < vocabs.length) ...[
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          icon: Icon(Icons.close_rounded, color: Colors.red.shade700),
-                          label: Text('Chưa Thuộc', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.red.shade700)),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            side: BorderSide(color: Colors.red.shade300),
-                          ),
-                          onPressed: () => _onNextCard(false, vocabs),
+                  if (!_isCardRevealed)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.flip_rounded),
+                        label: Text('Xem Đáp Án / Lật Thẻ', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: context.primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
+                        onPressed: () => _cardKey.currentState?.toggleCard(),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          icon: const Icon(Icons.check_circle_rounded),
-                          label: Text('Đã Thuộc', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                    )
+                  else
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: Icon(Icons.close_rounded, color: Colors.red.shade700),
+                            label: Text('Chưa Thuộc', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.red.shade700)),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              side: BorderSide(color: Colors.red.shade300),
+                            ),
+                            onPressed: () => _onNextCard(false, vocabs),
                           ),
-                          onPressed: () => _onNextCard(true, vocabs),
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.check_circle_rounded),
+                            label: Text('Đã Thuộc', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: context.primaryColor,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            onPressed: () => _onNextCard(true, vocabs),
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ],
             ),

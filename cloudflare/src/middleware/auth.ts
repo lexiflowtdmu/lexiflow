@@ -10,16 +10,6 @@ import type { AuthContext, Bindings } from '../types';
 const JWKS_URL = 'https://www.googleapis.com/robot/v1/metadata/jwk/securetoken@system.gserviceaccount.com';
 const JWKS = createRemoteJWKSet(new URL(JWKS_URL));
 
-/** Custom error class for authentication failures */
-export class AuthError extends Error {
-  constructor(
-    message: string,
-    public status: number
-  ) {
-    super(message);
-    this.name = 'AuthError';
-  }
-}
 
 /**
  * Hono middleware that verifies Firebase JWT from Authorization header.
@@ -61,6 +51,22 @@ export async function authMiddleware(c: Context<{ Bindings: Bindings; Variables:
     };
 
     c.set('auth', auth);
+
+    // Check if user is banned (skip for admin UIDs so they can still manage accounts)
+    const adminUids = (c.env.ADMIN_UIDS || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+    if (!adminUids.includes(auth.uid)) {
+      const userRow = await c.env.DB
+        .prepare('SELECT is_banned FROM users WHERE uid = ?')
+        .bind(auth.uid)
+        .first<{ is_banned: number }>();
+      if (userRow?.is_banned === 1) {
+        return c.json(
+          { success: false, error: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ hỗ trợ.' },
+          403
+        );
+      }
+    }
+
     await next();
   } catch (error) {
     console.error('JWT verification failed:', error);

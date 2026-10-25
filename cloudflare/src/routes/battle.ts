@@ -33,12 +33,14 @@ export interface BattleRoom {
   createdAt: number;
 }
 
-// In-Memory Room Store for Cloudflare Worker Instance State & Fast Realtime Sync
+// In-Memory Room Store — NOTE: Cloudflare Workers run on multiple edge nodes.
+// This store is per-instance only. For production multi-player correctness,
+// migrate to Cloudflare Durable Objects.
 const roomStore = new Map<string, BattleRoom>();
 const sseClients = new Map<string, Set<(data: string) => void>>();
 
 function generateRoomCode(mode: '1v1' | 'kahoot'): string {
-  const num = Math.floor(1000 + Math.random() * 9000);
+  const num = Math.floor(100000 + Math.random() * 900000); // 6-digit to reduce collision risk
   return mode === '1v1' ? `BTL-${num}` : `ROOM-${num}`;
 }
 
@@ -87,21 +89,28 @@ function broadcastToRoom(roomId: string, event: string, payload: any) {
   clients.forEach((send) => send(msg));
 }
 
+/** Check if the authenticated user is an admin via ADMIN_UIDS env var */
+function isAdmin(c: any): boolean {
+  const { uid } = c.get('auth');
+  const adminUids = (c.env.ADMIN_UIDS || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+  return adminUids.includes(uid);
+}
+
 /**
  * POST /api/battle/create
  * Create 1v1 battle or Kahoot group room
  */
 battleRoutes.post('/create', async (c) => {
   try {
+    const { uid } = c.get('auth'); // Always use JWT uid, never trust body.hostUid
     const body = await c.req.json<{
-      hostUid: string;
       hostName: string;
       hostAvatar?: string;
       mode: '1v1' | 'kahoot';
     }>();
 
-    if (!body.hostUid || !body.hostName) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing hostUid or hostName' }, 400);
+    if (!body.hostName) {
+      return c.json<ApiResponse>({ success: false, error: 'Missing hostName' }, 400);
     }
 
     const roomId = `room-${Date.now()}`;
@@ -112,14 +121,14 @@ battleRoutes.post('/create', async (c) => {
       roomCode,
       mode: body.mode || '1v1',
       status: 'lobby',
-      hostUid: body.hostUid,
+      hostUid: uid,
       currentQuestionIndex: 0,
       questions: mockBattleQuestions,
       players: {
-        [body.hostUid]: {
-          uid: body.hostUid,
+        [uid]: {
+          uid,
           name: body.hostName,
-          avatarUrl: body.hostAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${body.hostUid}`,
+          avatarUrl: body.hostAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${uid}`,
           score: 0,
           isReady: true,
           connected: true,
@@ -147,15 +156,15 @@ battleRoutes.post('/create', async (c) => {
  */
 battleRoutes.post('/join', async (c) => {
   try {
+    const { uid } = c.get('auth'); // Always use JWT uid, never trust body.uid
     const body = await c.req.json<{
       roomCode: string;
-      uid: string;
       name: string;
       avatarUrl?: string;
     }>();
 
-    if (!body.roomCode || !body.uid) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing roomCode or uid' }, 400);
+    if (!body.roomCode) {
+      return c.json<ApiResponse>({ success: false, error: 'Missing roomCode' }, 400);
     }
 
     const code = body.roomCode.trim().toUpperCase();
@@ -165,14 +174,14 @@ battleRoutes.post('/join', async (c) => {
       return c.json<ApiResponse>({ success: false, error: 'Phòng đấu không tồn tại hoặc đã kết thúc' }, 404);
     }
 
-    if (room.mode === '1v1' && Object.keys(room.players).length >= 2 && !room.players[body.uid]) {
+    if (room.mode === '1v1' && Object.keys(room.players).length >= 2 && !room.players[uid]) {
       return c.json<ApiResponse>({ success: false, error: 'Phòng 1v1 đã đủ 2 người' }, 400);
     }
 
-    room.players[body.uid] = {
-      uid: body.uid,
+    room.players[uid] = {
+      uid,
       name: body.name || 'Người chơi LexiFlow',
-      avatarUrl: body.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${body.uid}`,
+      avatarUrl: body.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${uid}`,
       score: 0,
       isReady: true,
       connected: true,
@@ -202,9 +211,9 @@ battleRoutes.post('/join', async (c) => {
  */
 battleRoutes.post('/submit-answer', async (c) => {
   try {
+    const { uid } = c.get('auth'); // Use JWT uid to identify the player
     const body = await c.req.json<{
       roomId: string;
-      uid: string;
       questionIndex: number;
       answerOption: string;
       responseTimeMs: number;
@@ -215,15 +224,14 @@ battleRoutes.post('/submit-answer', async (c) => {
       return c.json<ApiResponse>({ success: false, error: 'Phòng đấu không tồn tại' }, 404);
     }
 
-    const player = room.players[body.uid];
+    const player = room.players[uid];
     if (!player) {
       return c.json<ApiResponse>({ success: false, error: 'Người chơi không trong phòng này' }, 400);
     }
 
     const q = room.questions[body.questionIndex];
     const isCorrect = q && q.correctAnswer === body.answerOption;
-    
-    // Scoring logic: 100 base points if correct + speed bonus (up to 50 pts for fast response within 15s)
+
     let speedBonus = 0;
     if (isCorrect) {
       speedBonus = Math.max(0, Math.round((15000 - Math.min(body.responseTimeMs, 15000)) / 300));
@@ -281,19 +289,24 @@ battleRoutes.get('/room/:roomId', async (c) => {
   return c.json<ApiResponse<BattleRoom>>({ success: true, data: room });
 });
 
-// In-Memory Quiz Session Store for Server-side Scoring & Anti-cheat
+// ─── Server-side Quiz Sessions ────────────────────────────────────────────────
+
 export interface ServerQuizSession {
   sessionId: string;
   uid: string;
   serverStartTime: number;
   questions: Array<{ id: string; word: string; phonetic: string; options: string[]; correctAnswer: string }>;
   answers: Record<string, { selected: string; durationMs: number; isCorrect: boolean }>;
+  // Per-question start times for accurate anti-cheat timing
+  questionStartTimes: Record<string, number>;
   status: 'active' | 'submitted' | 'flagged';
   earnedXp: number;
   flagReason?: string;
   createdAt: number;
 }
 
+// NOTE: In-memory store has same multi-instance caveat as roomStore.
+// For production persistence, migrate to D1 with a quiz_sessions table + TTL.
 const quizSessionStore = new Map<string, ServerQuizSession>();
 const flaggedSessions: ServerQuizSession[] = [];
 
@@ -303,11 +316,7 @@ const flaggedSessions: ServerQuizSession[] = [];
  */
 battleRoutes.post('/session/start', async (c) => {
   try {
-    const body = await c.req.json<{ uid: string }>();
-    if (!body.uid) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing uid' }, 400);
-    }
-
+    const { uid } = c.get('auth'); // Always use JWT uid
     const sessionId = `qsession-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
     const questions = mockBattleQuestions.map((q) => ({
       id: `q-${q.index}`,
@@ -317,28 +326,33 @@ battleRoutes.post('/session/start', async (c) => {
       correctAnswer: q.correctAnswer
     }));
 
+    const now = Date.now();
+    // Track per-question start times; first question starts when session is created
+    const questionStartTimes: Record<string, number> = {};
+    if (questions.length > 0) {
+      questionStartTimes[questions[0].id] = now;
+    }
+
     const session: ServerQuizSession = {
       sessionId,
-      uid: body.uid,
-      serverStartTime: Date.now(),
+      uid,
+      serverStartTime: now,
       questions,
       answers: {},
+      questionStartTimes,
       status: 'active',
       earnedXp: 0,
-      createdAt: Date.now()
+      createdAt: now
     };
 
     quizSessionStore.set(sessionId, session);
 
-    // Sanitize questions sent to client: DO NOT INCLUDE correctAnswer!
+    // DO NOT include correctAnswer in client response
     const clientQuestions = questions.map(({ correctAnswer, ...rest }) => rest);
 
     return c.json<ApiResponse<{ sessionId: string; questions: any[] }>>({
       success: true,
-      data: {
-        sessionId,
-        questions: clientQuestions
-      }
+      data: { sessionId, questions: clientQuestions }
     });
   } catch (err) {
     return c.json<ApiResponse>({ success: false, error: (err as Error).message }, 500);
@@ -347,10 +361,11 @@ battleRoutes.post('/session/start', async (c) => {
 
 /**
  * POST /api/battle/session/submit-answer
- * Chấm điểm phía Server-side & Kiểm tra thời gian Anti-Cheat
+ * Server-side scoring with per-question anti-cheat timing
  */
 battleRoutes.post('/session/submit-answer', async (c) => {
   try {
+    const { uid } = c.get('auth');
     const body = await c.req.json<{
       sessionId: string;
       questionId: string;
@@ -360,6 +375,11 @@ battleRoutes.post('/session/submit-answer', async (c) => {
     const session = quizSessionStore.get(body.sessionId);
     if (!session) {
       return c.json<ApiResponse>({ success: false, error: 'Quiz session không tồn tại hoặc đã hết hạn' }, 404);
+    }
+
+    // Verify this session belongs to the authenticated user
+    if (session.uid !== uid) {
+      return c.json<ApiResponse>({ success: false, error: 'Session không thuộc về bạn' }, 403);
     }
 
     if (session.status !== 'active') {
@@ -372,10 +392,11 @@ battleRoutes.post('/session/submit-answer', async (c) => {
     }
 
     const now = Date.now();
-    const durationMs = now - session.serverStartTime;
+    // Use per-question start time for accurate timing; fall back to session start for first question
+    const questionStartTime = session.questionStartTimes[body.questionId] ?? session.serverStartTime;
+    const durationMs = now - questionStartTime;
 
-    // Server-side Anti-Cheat Check: If response time per question is under 350ms, flag as bot/cheat
-    const isBotLike = durationMs < 350;
+    const isBotLike = durationMs < 350; // Under 350ms is inhuman response speed
     const isCorrect = question.correctAnswer === body.selectedOption;
 
     session.answers[body.questionId] = {
@@ -396,6 +417,15 @@ battleRoutes.post('/session/submit-answer', async (c) => {
       flaggedSessions.push(session);
     }
 
+    // Set start time for the next unanswered question
+    const currentIdx = session.questions.findIndex((q) => q.id === body.questionId);
+    if (currentIdx >= 0 && currentIdx < session.questions.length - 1) {
+      const nextQuestion = session.questions[currentIdx + 1];
+      if (!session.questionStartTimes[nextQuestion.id]) {
+        session.questionStartTimes[nextQuestion.id] = now;
+      }
+    }
+
     return c.json<ApiResponse<{ isCorrect: boolean; pointsEarned: number; isFlagged: boolean }>>({
       success: true,
       data: {
@@ -411,9 +441,12 @@ battleRoutes.post('/session/submit-answer', async (c) => {
 
 /**
  * GET /api/battle/admin/flagged
- * Admin endpoint: Xem danh sách các bài làm bị gắn cờ nghi vấn gian lận
+ * Admin only: View flagged sessions suspected of cheating
  */
 battleRoutes.get('/admin/flagged', async (c) => {
+  if (!isAdmin(c)) {
+    return c.json<ApiResponse>({ success: false, error: 'Forbidden' }, 403);
+  }
   return c.json<ApiResponse<{ flaggedSessions: ServerQuizSession[] }>>({
     success: true,
     data: { flaggedSessions }
@@ -422,9 +455,12 @@ battleRoutes.get('/admin/flagged', async (c) => {
 
 /**
  * POST /api/battle/admin/resolve
- * Admin endpoint: Khôi phục XP nếu gắn cờ nhầm
+ * Admin only: Approve or reject a flagged session
  */
 battleRoutes.post('/admin/resolve', async (c) => {
+  if (!isAdmin(c)) {
+    return c.json<ApiResponse>({ success: false, error: 'Forbidden' }, 403);
+  }
   try {
     const body = await c.req.json<{ sessionId: string; action: 'approve' | 'reject' }>();
     const idx = flaggedSessions.findIndex((s) => s.sessionId === body.sessionId);
@@ -436,13 +472,12 @@ battleRoutes.post('/admin/resolve', async (c) => {
     if (body.action === 'approve') {
       session.status = 'submitted';
       flaggedSessions.splice(idx, 1);
-      return c.json<ApiResponse>({ success: true, message: 'Đã phê duyệt và cộng XP hợp lệ.' });
+      return c.json<ApiResponse>({ success: true, message: 'Đã phê duyệt và cộng XP hợp lệ.' } as any);
     } else {
       flaggedSessions.splice(idx, 1);
-      return c.json<ApiResponse>({ success: true, message: 'Đã hủy bài thi gian lận.' });
+      return c.json<ApiResponse>({ success: true, message: 'Đã hủy bài thi gian lận.' } as any);
     }
   } catch (err) {
     return c.json<ApiResponse>({ success: false, error: (err as Error).message }, 500);
   }
 });
-

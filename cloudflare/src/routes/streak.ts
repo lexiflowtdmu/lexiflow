@@ -51,17 +51,15 @@ streak.get('/', async (c) => {
       return c.json({ success: true, streak: 0 });
     }
 
-    const row = result as { current_streak: number; last_study_date: string };
+    const row = result as { current_streak: number; longest_streak: number; last_study_date: string };
     const lastDate = toDateString(row.last_study_date);
     const today = todayString();
     const yesterday = yesterdayString();
 
     if (lastDate === today || lastDate === yesterday) {
-      // Streak is active (studied today or yesterday)
-      return c.json({ success: true, streak: row.current_streak });
+      return c.json({ success: true, streak: row.current_streak, longest_streak: row.longest_streak ?? row.current_streak });
     } else {
-      // Streak broken
-      return c.json({ success: true, streak: 0 });
+      return c.json({ success: true, streak: 0, longest_streak: row.longest_streak ?? 0 });
     }
   } catch (error) {
     console.error('Error fetching streak:', error);

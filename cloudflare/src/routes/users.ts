@@ -15,8 +15,8 @@ function generateUserCode(): string {
  */
 userRoutes.post('/profile', async (c) => {
   try {
+    const { uid } = c.get('auth'); // Always use JWT uid, never trust body.uid
     const body = await c.req.json<{
-      uid: string;
       email: string;
       displayName?: string;
       avatarUrl?: string;
@@ -25,8 +25,8 @@ userRoutes.post('/profile', async (c) => {
       xp?: number;
     }>();
 
-    if (!body.uid || !body.email) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing required uid or email' }, 400);
+    if (!body.email) {
+      return c.json<ApiResponse>({ success: false, error: 'Missing required email' }, 400);
     }
 
     const db = c.env.DB;
@@ -34,7 +34,7 @@ userRoutes.post('/profile', async (c) => {
     // Check existing profile
     const existing = await db
       .prepare('SELECT * FROM users WHERE uid = ?')
-      .bind(body.uid)
+      .bind(uid)
       .first<UserProfile>();
 
     let userCode = existing?.user_code;
@@ -51,7 +51,7 @@ userRoutes.post('/profile', async (c) => {
     }
 
     const displayName = body.displayName || existing?.display_name || body.email.split('@')[0];
-    const avatarUrl = body.avatarUrl || existing?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${body.uid}`;
+    const avatarUrl = body.avatarUrl || existing?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${uid}`;
     const isPublic = body.isPublicProfile !== undefined ? body.isPublicProfile : (existing?.is_public_profile ?? 0);
     const level = body.level !== undefined ? body.level : (existing?.level ?? 1);
     const xp = body.xp !== undefined ? body.xp : (existing?.xp ?? 0);
@@ -68,10 +68,10 @@ userRoutes.post('/profile', async (c) => {
            xp = excluded.xp,
            updated_at = datetime('now')`
       )
-      .bind(body.uid, body.email, displayName, avatarUrl, userCode, isPublic, level, xp)
+      .bind(uid, body.email, displayName, avatarUrl, userCode, isPublic, level, xp)
       .run();
 
-    const updated = await db.prepare('SELECT * FROM users WHERE uid = ?').bind(body.uid).first<UserProfile>();
+    const updated = await db.prepare('SELECT * FROM users WHERE uid = ?').bind(uid).first<UserProfile>();
 
     return c.json<ApiResponse<UserProfile>>({
       success: true,
@@ -89,7 +89,7 @@ userRoutes.post('/profile', async (c) => {
 userRoutes.get('/profile/:targetUid', async (c) => {
   try {
     const targetUid = c.req.param('targetUid');
-    const requesterUid = c.req.query('requesterUid') || targetUid;
+    const { uid: requesterUid } = c.get('auth');
 
     const db = c.env.DB;
 
@@ -161,13 +161,13 @@ userRoutes.get('/profile/:targetUid', async (c) => {
 });
 
 /**
- * GET /api/users/search?q=...&requesterUid=...
+ * GET /api/users/search?q=...
  * Search users by username, email, or exact user_code (#LEXI-XXXX)
  */
 userRoutes.get('/search', async (c) => {
   try {
+    const { uid: requesterUid } = c.get('auth');
     const q = (c.req.query('q') || '').trim();
-    const requesterUid = c.req.query('requesterUid') || '';
 
     if (!q || q.length < 2) {
       return c.json<ApiResponse<FriendUser[]>>({ success: true, data: [] });
@@ -175,44 +175,38 @@ userRoutes.get('/search', async (c) => {
 
     const db = c.env.DB;
     const queryPattern = `%${q}%`;
+    const codePattern = q.startsWith('#') ? q : queryPattern;
 
+    // Single query with LEFT JOIN to avoid N+1 friendship lookups
     const results = await db
       .prepare(
-        `SELECT * FROM users 
-         WHERE (user_code LIKE ? OR display_name LIKE ? OR email LIKE ?)
-           AND uid != ?
+        `SELECT u.*,
+           f.requester_uid as f_requester, f.receiver_uid as f_receiver, f.status as f_status
+         FROM users u
+         LEFT JOIN friendships f ON (
+           (f.requester_uid = ? AND f.receiver_uid = u.uid) OR
+           (f.requester_uid = u.uid AND f.receiver_uid = ?)
+         )
+         WHERE (u.user_code LIKE ? OR u.display_name LIKE ? OR u.email LIKE ?)
+           AND u.uid != ?
          LIMIT 20`
       )
-      .bind(q.startsWith('#') ? q : queryPattern, queryPattern, queryPattern, requesterUid)
-      .all<UserProfile>();
+      .bind(requesterUid, requesterUid, codePattern, queryPattern, queryPattern, requesterUid)
+      .all<UserProfile & { f_requester: string | null; f_receiver: string | null; f_status: string | null }>();
 
-    const usersList: FriendUser[] = [];
-
-    for (const u of results.results) {
+    const usersList: FriendUser[] = results.results.map((u) => {
       let relationshipStatus: FriendUser['relationshipStatus'] = 'none';
-      if (requesterUid) {
-        const friendship = await db
-          .prepare(
-            `SELECT * FROM friendships 
-             WHERE (requester_uid = ? AND receiver_uid = ?) 
-                OR (requester_uid = ? AND receiver_uid = ?)`
-          )
-          .bind(requesterUid, u.uid, u.uid, requesterUid)
-          .first<{ requester_uid: string; receiver_uid: string; status: string }>();
-
-        if (friendship) {
-          if (friendship.status === 'accepted') relationshipStatus = 'accepted';
-          else if (friendship.status === 'pending') {
-            relationshipStatus = friendship.requester_uid === requesterUid ? 'pending_sent' : 'pending_received';
-          }
+      if (u.f_status) {
+        if (u.f_status === 'accepted') relationshipStatus = 'accepted';
+        else if (u.f_status === 'pending') {
+          relationshipStatus = u.f_requester === requesterUid ? 'pending_sent' : 'pending_received';
+        } else if (u.f_status === 'blocked') {
+          relationshipStatus = 'blocked';
         }
       }
-
-      usersList.push({
-        ...u,
-        relationshipStatus
-      });
-    }
+      const { f_requester: _fr, f_receiver: _fv, f_status: _fs, ...profile } = u;
+      return { ...profile, relationshipStatus };
+    });
 
     return c.json<ApiResponse<FriendUser[]>>({
       success: true,
@@ -229,13 +223,11 @@ userRoutes.get('/search', async (c) => {
  */
 userRoutes.post('/heartbeat', async (c) => {
   try {
-    const body = await c.req.json<{ uid: string }>();
-    if (!body.uid) return c.json<ApiResponse>({ success: false, error: 'Missing uid' }, 400);
-
+    const { uid } = c.get('auth');
     const db = c.env.DB;
     await db
       .prepare(`UPDATE users SET last_active_at = datetime('now') WHERE uid = ?`)
-      .bind(body.uid)
+      .bind(uid)
       .run();
 
     return c.json<ApiResponse>({ success: true });
@@ -250,18 +242,20 @@ userRoutes.post('/heartbeat', async (c) => {
  */
 userRoutes.post('/xp', async (c) => {
   try {
-    const body = await c.req.json<{ uid: string; xpAmount: number; source?: string }>();
-    if (!body.uid || !body.xpAmount) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing uid or xpAmount' }, 400);
+    const { uid } = c.get('auth');
+    const body = await c.req.json<{ xpAmount: number; source?: string }>();
+    if (!body.xpAmount || body.xpAmount <= 0) {
+      return c.json<ApiResponse>({ success: false, error: 'Missing or invalid xpAmount' }, 400);
     }
 
+    const xpAmount = Math.min(body.xpAmount, 500);
     const db = c.env.DB;
     const txId = `xptx-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
 
     // Add to total XP
     await db
       .prepare(`UPDATE users SET xp = xp + ?, updated_at = datetime('now') WHERE uid = ?`)
-      .bind(body.xpAmount, body.uid)
+      .bind(xpAmount, uid)
       .run();
 
     // Log XP transaction for weekly leaderboard calculation
@@ -270,10 +264,10 @@ userRoutes.post('/xp', async (c) => {
         `INSERT INTO xp_transactions (id, uid, xp_amount, source, created_at)
          VALUES (?, ?, ?, ?, datetime('now'))`
       )
-      .bind(txId, body.uid, body.xpAmount, body.source || 'study')
+      .bind(txId, uid, xpAmount, body.source || 'study')
       .run();
 
-    return c.json<ApiResponse<{ added: number }>>({ success: true, data: { added: body.xpAmount } });
+    return c.json<ApiResponse<{ added: number }>>({ success: true, data: { added: xpAmount } });
   } catch (err) {
     return c.json<ApiResponse>({ success: false, error: (err as Error).message }, 500);
   }
@@ -285,11 +279,7 @@ userRoutes.post('/xp', async (c) => {
  */
 userRoutes.get('/settings', async (c) => {
   try {
-    const auth = c.get('auth');
-    const uid = auth?.uid || c.req.query('uid');
-    if (!uid) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing uid' }, 400);
-    }
+    const { uid } = c.get('auth');
 
     const db = c.env.DB;
     const results = await db
@@ -317,44 +307,33 @@ userRoutes.get('/settings', async (c) => {
  */
 userRoutes.post('/settings', async (c) => {
   try {
-    const auth = c.get('auth');
+    const { uid } = c.get('auth');
     const body = await c.req.json<{
-      uid?: string;
       settings: Array<{ key: string; value: string; updated_at?: string }>;
     }>();
 
-    const uid = auth?.uid || body.uid;
-    if (!uid || !body.settings || !Array.isArray(body.settings)) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing uid or settings array' }, 400);
+    if (!body.settings || !Array.isArray(body.settings)) {
+      return c.json<ApiResponse>({ success: false, error: 'Missing settings array' }, 400);
     }
 
     const db = c.env.DB;
 
-    for (const item of body.settings) {
-      if (!item.key) continue;
-      const key = item.key;
-      const value = item.value;
-      const clientUpdatedAt = item.updated_at || new Date().toISOString();
-
-      // Check existing setting timestamp
-      const existing = await db
-        .prepare('SELECT updated_at FROM user_settings WHERE uid = ? AND key = ?')
-        .bind(uid, key)
-        .first<{ updated_at: string }>();
-
-      if (!existing || new Date(clientUpdatedAt) >= new Date(existing.updated_at)) {
-        await db
+    const now = new Date().toISOString();
+    const batchUpserts = body.settings
+      .filter((item) => item.key)
+      .map((item) =>
+        db
           .prepare(
             `INSERT INTO user_settings (uid, key, value, updated_at)
              VALUES (?, ?, ?, ?)
              ON CONFLICT(uid, key) DO UPDATE SET
                value = excluded.value,
-               updated_at = excluded.updated_at`
+               updated_at = excluded.updated_at
+             WHERE excluded.updated_at >= user_settings.updated_at`
           )
-          .bind(uid, key, value, clientUpdatedAt)
-          .run();
-      }
-    }
+          .bind(uid, item.key, item.value, item.updated_at || now)
+      );
+    if (batchUpserts.length > 0) await db.batch(batchUpserts);
 
     const updatedResults = await db
       .prepare('SELECT key, value, updated_at FROM user_settings WHERE uid = ?')

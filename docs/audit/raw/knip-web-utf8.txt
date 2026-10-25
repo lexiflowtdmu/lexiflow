@@ -1,0 +1,29 @@
+﻿Unused files (5)
+capture_after.mjs                      
+capture_before.mjs                     
+src/App.css                            
+src/components/views/DeckShareModal.tsx
+src/utils/reviewSync.ts                
+Unused dependencies (1)
+tailwind-merge  package.json:18:6
+Unused devDependencies (1)
+playwright  package.json:27:6
+Unused exports (11)
+App                  function  src/App.tsx:33:17                                   
+CardRoot                       src/components/ui/Card.tsx:9:14                     
+CardHeader                     src/components/ui/Card.tsx:42:14                    
+CardTitle                      src/components/ui/Card.tsx:58:14                    
+CardBody                       src/components/ui/Card.tsx:74:14                    
+CardFooter                     src/components/ui/Card.tsx:80:14                    
+EmptyState                     src/components/ui/EmptyState.tsx:15:14              
+Skeleton                       src/components/ui/Skeleton.tsx:10:14                
+mockFriendsList                src/components/views/FriendsView.tsx:22:14          
+mockPendingRequests            src/components/views/FriendsView.tsx:67:14          
+mockGroups                     src/components/views/GroupsLeaderboardView.tsx:38:14
+Unused exported types (4)
+EmptyStateProps  interface  src/components/ui/EmptyState.tsx:6:18               
+SkeletonProps    interface  src/components/ui/Skeleton.tsx:4:18                 
+GroupMember      interface  src/components/views/GroupsLeaderboardView.tsx:19:18
+GroupData        interface  src/components/views/GroupsLeaderboardView.tsx:30:18
+Duplicate exports (1)
+App|default  src/App.tsx

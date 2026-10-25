@@ -16,6 +16,9 @@ import { groupRoutes } from './routes/groups';
 import { deckRoutes } from './routes/decks';
 import { nudgeRoutes } from './routes/nudges';
 import { battleRoutes } from './routes/battle';
+import { farmRoutes } from './routes/farm';
+import { homeRoutes } from './routes/home';
+import { adminRoutes } from './routes/admin';
 import type { Bindings, Variables } from './types';
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -48,6 +51,9 @@ api.route('/groups', groupRoutes);
 api.route('/decks', deckRoutes);
 api.route('/nudges', nudgeRoutes);
 api.route('/battle', battleRoutes);
+api.route('/farm', farmRoutes);
+api.route('/home', homeRoutes);
+api.route('/admin', adminRoutes);
 
 app.route('/api/v1', api);
 

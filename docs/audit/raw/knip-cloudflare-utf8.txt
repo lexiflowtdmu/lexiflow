@@ -1,0 +1,27 @@
+﻿Unused files (9)
+src/utils/audioCacheHeaders.ts    
+src/utils/d1RetryBatch.ts         
+src/utils/notificationScheduler.ts
+test_hangmuc2.js                  
+test_hangmuc3.js                  
+test_hangmuc5.js                  
+test_hangmuc6.js                  
+test_hangmuc7.js                  
+test_sm2.js                       
+Unused exports (4)
+AuthError              class     src/middleware/auth.ts:14:14
+corsHeaders            function  src/middleware/cors.ts:8:17 
+isValidInput           function  src/utils/sanitize.ts:40:17 
+calculateNextSM2State  function  src/utils/sm2Engine.ts:28:17
+Unused exported types (11)
+BattleQuestion     interface  src/routes/battle.ts:6:18  
+BattlePlayer       interface  src/routes/battle.ts:14:18 
+BattleRoom         interface  src/routes/battle.ts:24:18 
+ServerQuizSession  interface  src/routes/battle.ts:285:18
+SharedDeckItem     interface  src/routes/decks.ts:11:18  
+GroupItem          interface  src/routes/groups.ts:11:18 
+SocialNudgeItem    interface  src/routes/nudges.ts:6:18  
+Flashcard          interface  src/types/index.ts:23:18   
+HistoryItem        interface  src/types/index.ts:53:18   
+BookmarkItem       interface  src/types/index.ts:62:18   
+StudyStreak        interface  src/types/index.ts:70:18   

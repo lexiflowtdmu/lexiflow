@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../core/theme/app_theme.dart';
+import 'package:lexiflow/core/theme/app_theme.dart';
+import 'package:lexiflow/core/theme/theme_extension.dart';
 
 class StudyStatsCard extends StatelessWidget {
   final bool loadingStats;
@@ -19,7 +20,6 @@ class StudyStatsCard extends StatelessWidget {
   });
 
   Widget _buildStatLabel(BuildContext context, String title, int count, Color color) {
-    final textColor = AppTheme.textColor(context);
     return Row(
       children: [
         Container(
@@ -30,7 +30,7 @@ class StudyStatsCard extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           '$title: $count',
-          style: GoogleFonts.outfit(fontSize: 13, color: textColor, fontWeight: FontWeight.w500),
+          style: GoogleFonts.outfit(fontSize: 13, color: context.textColor, fontWeight: FontWeight.w500),
         ),
       ],
     );
@@ -42,21 +42,16 @@ class StudyStatsCard extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final cardColor = AppTheme.cardColor(context);
-    final textColor = AppTheme.textColor(context);
-    final subTextColor = AppTheme.subTextColor(context);
-    final borderColor = AppTheme.borderColor(context);
-    final primaryColor = AppTheme.primaryColor(context);
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: cardColor,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: borderColor, width: 1),
+        border: Border.all(color: context.borderColor, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.03),
+            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.03),
             blurRadius: 16,
             offset: const Offset(0, 4),
           )
@@ -69,9 +64,9 @@ class StudyStatsCard extends StatelessWidget {
             children: [
               Text(
                 'Tổng cộng: $totalCards từ vựng',
-                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor, fontSize: 16),
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.textColor, fontSize: 16),
               ),
-              Icon(Icons.pie_chart_outline_rounded, color: primaryColor, size: 20),
+              Icon(Icons.pie_chart_outline_rounded, color: context.primaryColor, size: 20),
             ],
           ),
           const SizedBox(height: 16),
@@ -80,7 +75,7 @@ class StudyStatsCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: Text(
                     'Chưa có thống kê. Hãy lưu thêm từ vựng để bắt đầu ôn tập.',
-                    style: GoogleFonts.outfit(color: subTextColor, fontSize: 13),
+                    style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 13),
                   ),
                 )
               : Column(
@@ -95,7 +90,7 @@ class StudyStatsCard extends StatelessWidget {
                             if (newCards > 0)
                               Expanded(
                                 flex: newCards,
-                                child: Container(color: AppTheme.isDark(context) ? Colors.grey.shade700 : Colors.grey.shade300),
+                                child: Container(color: context.isDark ? Colors.grey.shade700 : Colors.grey.shade300),
                               ),
                             if (learningCards > 0)
                               Expanded(
@@ -105,7 +100,7 @@ class StudyStatsCard extends StatelessWidget {
                             if (memorizedCards > 0)
                               Expanded(
                                 flex: memorizedCards,
-                                child: Container(color: primaryColor),
+                                child: Container(color: context.primaryColor),
                               ),
                           ],
                         ),
@@ -115,9 +110,9 @@ class StudyStatsCard extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildStatLabel(context, 'Chưa học', newCards, AppTheme.isDark(context) ? Colors.grey.shade400 : Colors.grey.shade400),
+                        _buildStatLabel(context, 'Chưa học', newCards, context.isDark ? Colors.grey.shade400 : Colors.grey.shade400),
                         _buildStatLabel(context, 'Đang học', learningCards, AppTheme.accentOrange),
-                        _buildStatLabel(context, 'Đã thuộc', memorizedCards, primaryColor),
+                        _buildStatLabel(context, 'Đã thuộc', memorizedCards, context.primaryColor),
                       ],
                     ),
                   ],

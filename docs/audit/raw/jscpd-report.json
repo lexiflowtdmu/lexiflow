@@ -1,0 +1,2247 @@
+{
+  "duplicates": [
+    {
+      "firstFile": {
+        "end": 19,
+        "endLoc": {
+          "column": 89,
+          "line": 19,
+          "position": 900
+        },
+        "name": "db\\migrations\\0001_review_logs_and_settings.sql",
+        "start": 6,
+        "startLoc": {
+          "column": 0,
+          "line": 6,
+          "position": 261
+        }
+      },
+      "format": "sql",
+      "fragment": "CREATE TABLE IF NOT EXISTS review_logs (\n    review_id   TEXT PRIMARY KEY,\n    uid         TEXT NOT NULL,\n    card_id     TEXT NOT NULL,\n    rating      INTEGER NOT NULL, -- 1: Again, 2: Hard, 3: Good, 4: Easy\n    client_time TEXT NOT NULL,\n    server_time TEXT NOT NULL DEFAULT (datetime('now')),\n    device_id   TEXT NOT NULL DEFAULT 'unknown',\n    is_undone   INTEGER NOT NULL DEFAULT 0,\n    created_at  TEXT NOT NULL DEFAULT (datetime('now'))\n);\n\nCREATE INDEX IF NOT EXISTS idx_review_logs_uid_card ON review_logs(uid, card_id, server_time ASC);\nCREATE INDEX IF NOT EXISTS idx_review_logs_uid_time ON review_logs(uid, server_time ASC);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 14,
+      "secondFile": {
+        "end": 175,
+        "endLoc": {
+          "column": 89,
+          "line": 175,
+          "position": 6892
+        },
+        "name": "db\\schema.sql",
+        "start": 162,
+        "startLoc": {
+          "column": 0,
+          "line": 162,
+          "position": 6253
+        }
+      },
+      "tokens": 104
+    },
+    {
+      "firstFile": {
+        "end": 30,
+        "endLoc": {
+          "column": 71,
+          "line": 30,
+          "position": 1244
+        },
+        "name": "db\\migrations\\0001_review_logs_and_settings.sql",
+        "start": 22,
+        "startLoc": {
+          "column": 0,
+          "line": 22,
+          "position": 949
+        }
+      },
+      "format": "sql",
+      "fragment": "CREATE TABLE IF NOT EXISTS user_settings (\n    uid         TEXT NOT NULL,\n    key         TEXT NOT NULL,\n    value       TEXT NOT NULL,\n    updated_at  TEXT NOT NULL DEFAULT (datetime('now')),\n    PRIMARY KEY (uid, key)\n);\n\nCREATE INDEX IF NOT EXISTS idx_user_settings_uid ON user_settings(uid);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 186,
+        "endLoc": {
+          "column": 71,
+          "line": 186,
+          "position": 7226
+        },
+        "name": "db\\schema.sql",
+        "start": 178,
+        "startLoc": {
+          "column": 0,
+          "line": 178,
+          "position": 6931
+        }
+      },
+      "tokens": 55
+    },
+    {
+      "firstFile": {
+        "end": 13,
+        "endLoc": {
+          "column": 78,
+          "line": 13,
+          "position": 576
+        },
+        "name": "db\\migrations\\0002_catchup_and_streak_freeze.sql",
+        "start": 5,
+        "startLoc": {
+          "column": 0,
+          "line": 5,
+          "position": 185
+        }
+      },
+      "format": "sql",
+      "fragment": "CREATE TABLE IF NOT EXISTS user_streak_freezes (\n    uid                 TEXT PRIMARY KEY,\n    available_freezes   INTEGER NOT NULL DEFAULT 0,\n    last_granted_at     TEXT NOT NULL DEFAULT '',\n    used_count          INTEGER NOT NULL DEFAULT 0,\n    updated_at          TEXT NOT NULL DEFAULT (datetime('now'))\n);\n\nCREATE INDEX IF NOT EXISTS idx_streak_freezes_uid ON user_streak_freezes(uid);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 197,
+        "endLoc": {
+          "column": 78,
+          "line": 197,
+          "position": 7661
+        },
+        "name": "db\\schema.sql",
+        "start": 189,
+        "startLoc": {
+          "column": 0,
+          "line": 189,
+          "position": 7270
+        }
+      },
+      "tokens": 58
+    },
+    {
+      "firstFile": {
+        "end": 64,
+        "endLoc": {
+          "column": 7,
+          "line": 64,
+          "position": 1943
+        },
+        "name": "routes\\bookmarks.ts",
+        "start": 55,
+        "startLoc": {
+          "column": 13,
+          "line": 55,
+          "position": 1650
+        }
+      },
+      "format": "typescript",
+      "fragment": "bookmarks.get('/:word', async (c) => {\n  const { uid } = c.get('auth');\n  const db = c.env.DB;\n  const word = decodeURIComponent(c.req.param('word')).trim().toLowerCase();\n\n  if (!word || word.length === 0) {\n    return c.json({ success: false, error: 'Từ vựng không hợp lệ.' }, 400);\n  }\n\n  try {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 95,
+        "endLoc": {
+          "column": 7,
+          "line": 95,
+          "position": 2974
+        },
+        "name": "routes\\history.ts",
+        "start": 86,
+        "startLoc": {
+          "column": 14,
+          "line": 86,
+          "position": 2681
+        }
+      },
+      "tokens": 86
+    },
+    {
+      "firstFile": {
+        "end": 88,
+        "endLoc": {
+          "column": 20,
+          "line": 88,
+          "position": 2587
+        },
+        "name": "routes\\bookmarks.ts",
+        "start": 82,
+        "startLoc": {
+          "column": 9,
+          "line": 82,
+          "position": 2440
+        }
+      },
+      "format": "typescript",
+      "fragment": "bookmarks.post('/', async (c) => {\n  const { uid } = c.get('auth');\n  const db = c.env.DB;\n\n  try {\n    const body = await c.req.json<{\n      word?: string;",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 7,
+      "secondFile": {
+        "end": 37,
+        "endLoc": {
+          "column": 50,
+          "line": 37,
+          "position": 1137
+        },
+        "name": "routes\\history.ts",
+        "start": 32,
+        "startLoc": {
+          "column": 7,
+          "line": 32,
+          "position": 996
+        }
+      },
+      "tokens": 50
+    },
+    {
+      "firstFile": {
+        "end": 115,
+        "endLoc": {
+          "column": 57,
+          "line": 115,
+          "position": 3461
+        },
+        "name": "routes\\decks.ts",
+        "start": 103,
+        "startLoc": {
+          "column": 25,
+          "line": 103,
+          "position": 2951
+        }
+      },
+      "format": "typescript",
+      "fragment": "deckRoutes.post('/import', async (c) => {\n  try {\n    const body = await c.req.json<{ shareCode: string; targetUid: string }>();\n\n    if (!body.shareCode || !body.targetUid) {\n      return c.json<ApiResponse>({ success: false, error: 'Missing shareCode or targetUid' }, 400);\n    }\n\n    const db = c.env.DB;\n    const deck = await db.prepare('SELECT * FROM shared_decks WHERE share_code = ?').bind(body.shareCode.trim().toUpperCase()).first<SharedDeckItem>();\n\n    if (!deck) {\n      return c.json<ApiResponse>({ success: false, error: 'Bộ thẻ chia sẻ không tồn tại' }, 404);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 13,
+      "secondFile": {
+        "end": 213,
+        "endLoc": {
+          "column": 57,
+          "line": 213,
+          "position": 7113
+        },
+        "name": "routes\\decks.ts",
+        "start": 202,
+        "startLoc": {
+          "column": 33,
+          "line": 202,
+          "position": 6604
+        }
+      },
+      "tokens": 130
+    },
+    {
+      "firstFile": {
+        "end": 158,
+        "endLoc": {
+          "column": 15,
+          "line": 158,
+          "position": 5061
+        },
+        "name": "routes\\decks.ts",
+        "start": 147,
+        "startLoc": {
+          "column": 27,
+          "line": 147,
+          "position": 4753
+        }
+      },
+      "format": "typescript",
+      "fragment": "      data: { importedCount, title: deck.title }\n    });\n  } catch (err) {\n    return c.json<ApiResponse>({ success: false, error: (err as Error).message }, 500);\n  }\n});\n\n/**\n * GET /api/decks/check-updates?shareCode=...&targetUid=...\n * Check if shared deck owner has added new words since recipient last imported\n */\ndeckRoutes.get('/check-updates', async (c) => {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 12,
+      "secondFile": {
+        "end": 267,
+        "endLoc": {
+          "column": 15,
+          "line": 267,
+          "position": 9068
+        },
+        "name": "routes\\decks.ts",
+        "start": 255,
+        "startLoc": {
+          "column": 29,
+          "line": 255,
+          "position": 8730
+        }
+      },
+      "tokens": 51
+    },
+    {
+      "firstFile": {
+        "end": 130,
+        "endLoc": {
+          "column": 9,
+          "line": 130,
+          "position": 4190
+        },
+        "name": "routes\\friends.ts",
+        "start": 121,
+        "startLoc": {
+          "column": 24,
+          "line": 121,
+          "position": 3974
+        }
+      },
+      "format": "typescript",
+      "fragment": "friendRoutes.get('/list', async (c) => {\n  try {\n    const uid = c.req.query('uid');\n    if (!uid) {\n      return c.json<ApiResponse>({ success: false, error: 'Missing uid query parameter' }, 400);\n    }\n\n    const db = c.env.DB;\n\n    const friendsRes = await db",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 169,
+        "endLoc": {
+          "column": 9,
+          "line": 169,
+          "position": 5249
+        },
+        "name": "routes\\friends.ts",
+        "start": 160,
+        "startLoc": {
+          "column": 28,
+          "line": 160,
+          "position": 5033
+        }
+      },
+      "tokens": 59
+    },
+    {
+      "firstFile": {
+        "end": 131,
+        "endLoc": {
+          "column": 3,
+          "line": 131,
+          "position": 3699
+        },
+        "name": "routes\\groups.ts",
+        "start": 124,
+        "startLoc": {
+          "column": 39,
+          "line": 124,
+          "position": 3526
+        }
+      },
+      "format": "typescript",
+      "fragment": "    return c.json<ApiResponse<GroupItem[]>>({\n      success: true,\n      data: res.results\n    });\n  } catch (err) {\n    return c.json<ApiResponse>({ success: false, error: (err as Error).message }, 500);\n  }\n});",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 8,
+      "secondFile": {
+        "end": 88,
+        "endLoc": {
+          "column": 3,
+          "line": 88,
+          "position": 2653
+        },
+        "name": "routes\\nudges.ts",
+        "start": 81,
+        "startLoc": {
+          "column": 45,
+          "line": 81,
+          "position": 2480
+        }
+      },
+      "tokens": 55
+    },
+    {
+      "firstFile": {
+        "end": 301,
+        "endLoc": {
+          "column": 21,
+          "line": 301,
+          "position": 10031
+        },
+        "name": "routes\\users.ts",
+        "start": 295,
+        "startLoc": {
+          "column": 18,
+          "line": 295,
+          "position": 9751
+        }
+      },
+      "format": "typescript",
+      "fragment": "    const results = await db\n      .prepare('SELECT key, value, updated_at FROM user_settings WHERE uid = ?')\n      .bind(uid)\n      .all<{ key: string; value: string; updated_at: string }>();\n\n    const settingsMap: Record<string, { value: string; updated_at: string }> = {};\n    for (const row of results.results) {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 7,
+      "secondFile": {
+        "end": 365,
+        "endLoc": {
+          "column": 21,
+          "line": 365,
+          "position": 12081
+        },
+        "name": "routes\\users.ts",
+        "start": 359,
+        "startLoc": {
+          "column": 25,
+          "line": 359,
+          "position": 11801
+        }
+      },
+      "tokens": 59
+    },
+    {
+      "firstFile": {
+        "end": 312,
+        "endLoc": {
+          "column": 3,
+          "line": 312,
+          "position": 10327
+        },
+        "name": "routes\\users.ts",
+        "start": 301,
+        "startLoc": {
+          "column": 29,
+          "line": 301,
+          "position": 10039
+        }
+      },
+      "format": "typescript",
+      "fragment": "    for (const row of results.results) {\n      settingsMap[row.key] = { value: row.value, updated_at: row.updated_at };\n    }\n\n    return c.json({\n      success: true,\n      settings: settingsMap\n    });\n  } catch (err) {\n    return c.json<ApiResponse>({ success: false, error: (err as Error).message }, 500);\n  }\n});",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 12,
+      "secondFile": {
+        "end": 376,
+        "endLoc": {
+          "column": 3,
+          "line": 376,
+          "position": 12384
+        },
+        "name": "routes\\users.ts",
+        "start": 365,
+        "startLoc": {
+          "column": 36,
+          "line": 365,
+          "position": 12096
+        }
+      },
+      "tokens": 79
+    },
+    {
+      "firstFile": {
+        "end": 230,
+        "endLoc": {
+          "column": 26,
+          "line": 230,
+          "position": 7992
+        },
+        "name": "core\\theme\\app_theme.dart",
+        "start": 215,
+        "startLoc": {
+          "column": 40,
+          "line": 215,
+          "position": 7481
+        }
+      },
+      "format": "dart",
+      "fragment": "          backgroundColor: primaryIndigo,\n          foregroundColor: Colors.white,\n          elevation: 0,\n          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),\n          shape: RoundedRectangleBorder(\n            borderRadius: BorderRadius.circular(16),\n          ),\n          textStyle: GoogleFonts.outfit(\n            fontSize: 16,\n            fontWeight: FontWeight.w600,\n          ),\n        ),\n      ),\n      outlinedButtonTheme: OutlinedButtonThemeData(\n        style: OutlinedButton.styleFrom(\n          foregroundColor: primaryIndigo,",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 16,
+      "secondFile": {
+        "end": 403,
+        "endLoc": {
+          "column": 26,
+          "line": 403,
+          "position": 13901
+        },
+        "name": "core\\theme\\app_theme.dart",
+        "start": 388,
+        "startLoc": {
+          "column": 44,
+          "line": 388,
+          "position": 13390
+        }
+      },
+      "tokens": 76
+    },
+    {
+      "firstFile": {
+        "end": 227,
+        "endLoc": {
+          "column": 8,
+          "line": 227,
+          "position": 7872
+        },
+        "name": "core\\theme\\app_theme.dart",
+        "start": 217,
+        "startLoc": {
+          "column": 22,
+          "line": 217,
+          "position": 7546
+        }
+      },
+      "format": "dart",
+      "fragment": "          elevation: 0,\n          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),\n          shape: RoundedRectangleBorder(\n            borderRadius: BorderRadius.circular(16),\n          ),\n          textStyle: GoogleFonts.outfit(\n            fontSize: 16,\n            fontWeight: FontWeight.w600,\n          ),\n        ),\n      ),",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 241,
+        "endLoc": {
+          "column": 8,
+          "line": 241,
+          "position": 8400
+        },
+        "name": "core\\theme\\app_theme.dart",
+        "start": 231,
+        "startLoc": {
+          "column": 66,
+          "line": 231,
+          "position": 8074
+        }
+      },
+      "tokens": 54
+    },
+    {
+      "firstFile": {
+        "end": 244,
+        "endLoc": {
+          "column": 18,
+          "line": 244,
+          "position": 8491
+        },
+        "name": "core\\theme\\app_theme.dart",
+        "start": 231,
+        "startLoc": {
+          "column": 53,
+          "line": 231,
+          "position": 8061
+        }
+      },
+      "format": "dart",
+      "fragment": "          side: const BorderSide(color: primaryIndigo, width: 1.5),\n          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),\n          shape: RoundedRectangleBorder(\n            borderRadius: BorderRadius.circular(16),\n          ),\n          textStyle: GoogleFonts.outfit(\n            fontSize: 16,\n            fontWeight: FontWeight.w600,\n          ),\n        ),\n      ),\n      inputDecorationTheme: InputDecorationTheme(\n        filled: true,\n        fillColor: Colors.white,",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 14,
+      "secondFile": {
+        "end": 417,
+        "endLoc": {
+          "column": 18,
+          "line": 417,
+          "position": 14408
+        },
+        "name": "core\\theme\\app_theme.dart",
+        "start": 404,
+        "startLoc": {
+          "column": 57,
+          "line": 404,
+          "position": 13978
+        }
+      },
+      "tokens": 69
+    },
+    {
+      "firstFile": {
+        "end": 67,
+        "endLoc": {
+          "column": 5,
+          "line": 67,
+          "position": 1791
+        },
+        "name": "data\\models\\vocab_model.dart",
+        "start": 60,
+        "startLoc": {
+          "column": 64,
+          "line": 60,
+          "position": 1567
+        }
+      },
+      "format": "dart",
+      "fragment": "    final nextReviewRaw = map['nextReview'] ?? map['next_review'];\n    if (nextReviewRaw is String) {\n      next = DateTime.parse(nextReviewRaw);\n    } else if (nextReviewRaw != null) {\n      next = DateTime.parse(nextReviewRaw.toString());\n    } else {\n      next = DateTime.now();\n    }",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 8,
+      "secondFile": {
+        "end": 95,
+        "endLoc": {
+          "column": 5,
+          "line": 95,
+          "position": 2787
+        },
+        "name": "data\\models\\vocab_model.dart",
+        "start": 88,
+        "startLoc": {
+          "column": 66,
+          "line": 88,
+          "position": 2563
+        }
+      },
+      "tokens": 53
+    },
+    {
+      "firstFile": {
+        "end": 112,
+        "endLoc": {
+          "column": 56,
+          "line": 112,
+          "position": 3883
+        },
+        "name": "presentation\\screens\\auth_screen.dart",
+        "start": 102,
+        "startLoc": {
+          "column": 7,
+          "line": 102,
+          "position": 3548
+        }
+      },
+      "format": "dart",
+      "fragment": "      },\n    );\n  }\n\n  @override\n  Widget build(BuildContext context) {\n    final cardColor = AppTheme.cardColor(context);\n    final textColor = AppTheme.textColor(context);\n    final subTextColor = AppTheme.subTextColor(context);\n    final borderColor = AppTheme.borderColor(context);\n    final primaryColor = AppTheme.primaryColor(context);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 74,
+        "endLoc": {
+          "column": 56,
+          "line": 74,
+          "position": 2212
+        },
+        "name": "presentation\\screens\\vocab_detail_screen.dart",
+        "start": 64,
+        "startLoc": {
+          "column": 7,
+          "line": 64,
+          "position": 1877
+        }
+      },
+      "tokens": 63
+    },
+    {
+      "firstFile": {
+        "end": 112,
+        "endLoc": {
+          "column": 56,
+          "line": 112,
+          "position": 3883
+        },
+        "name": "presentation\\screens\\auth_screen.dart",
+        "start": 103,
+        "startLoc": {
+          "column": 4,
+          "line": 103,
+          "position": 3554
+        }
+      },
+      "format": "dart",
+      "fragment": "    );\n  }\n\n  @override\n  Widget build(BuildContext context) {\n    final cardColor = AppTheme.cardColor(context);\n    final textColor = AppTheme.textColor(context);\n    final subTextColor = AppTheme.subTextColor(context);\n    final borderColor = AppTheme.borderColor(context);\n    final primaryColor = AppTheme.primaryColor(context);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 93,
+        "endLoc": {
+          "column": 56,
+          "line": 93,
+          "position": 2945
+        },
+        "name": "presentation\\screens\\custom_review_screen.dart",
+        "start": 84,
+        "startLoc": {
+          "column": 5,
+          "line": 84,
+          "position": 2616
+        }
+      },
+      "tokens": 62
+    },
+    {
+      "firstFile": {
+        "end": 112,
+        "endLoc": {
+          "column": 56,
+          "line": 112,
+          "position": 3883
+        },
+        "name": "presentation\\screens\\auth_screen.dart",
+        "start": 103,
+        "startLoc": {
+          "column": 4,
+          "line": 103,
+          "position": 3554
+        }
+      },
+      "format": "dart",
+      "fragment": "    );\n  }\n\n  @override\n  Widget build(BuildContext context) {\n    final cardColor = AppTheme.cardColor(context);\n    final textColor = AppTheme.textColor(context);\n    final subTextColor = AppTheme.subTextColor(context);\n    final borderColor = AppTheme.borderColor(context);\n    final primaryColor = AppTheme.primaryColor(context);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 45,
+        "endLoc": {
+          "column": 56,
+          "line": 45,
+          "position": 1663
+        },
+        "name": "presentation\\screens\\flashcard_study_screen.dart",
+        "start": 36,
+        "startLoc": {
+          "column": 87,
+          "line": 36,
+          "position": 1334
+        }
+      },
+      "tokens": 62
+    },
+    {
+      "firstFile": {
+        "end": 112,
+        "endLoc": {
+          "column": 56,
+          "line": 112,
+          "position": 3883
+        },
+        "name": "presentation\\screens\\auth_screen.dart",
+        "start": 104,
+        "startLoc": {
+          "column": 2,
+          "line": 104,
+          "position": 3559
+        }
+      },
+      "format": "dart",
+      "fragment": "  }\n\n  @override\n  Widget build(BuildContext context) {\n    final cardColor = AppTheme.cardColor(context);\n    final textColor = AppTheme.textColor(context);\n    final subTextColor = AppTheme.subTextColor(context);\n    final borderColor = AppTheme.borderColor(context);\n    final primaryColor = AppTheme.primaryColor(context);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 99,
+        "endLoc": {
+          "column": 56,
+          "line": 99,
+          "position": 3058
+        },
+        "name": "presentation\\screens\\bookmarks_screen.dart",
+        "start": 91,
+        "startLoc": {
+          "column": 2,
+          "line": 91,
+          "position": 2734
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 114,
+        "endLoc": {
+          "column": 10,
+          "line": 114,
+          "position": 3895
+        },
+        "name": "presentation\\screens\\auth_screen.dart",
+        "start": 108,
+        "startLoc": {
+          "column": 10,
+          "line": 108,
+          "position": 3623
+        }
+      },
+      "format": "dart",
+      "fragment": "    final cardColor = AppTheme.cardColor(context);\n    final textColor = AppTheme.textColor(context);\n    final subTextColor = AppTheme.subTextColor(context);\n    final borderColor = AppTheme.borderColor(context);\n    final primaryColor = AppTheme.primaryColor(context);\n\n    return Scaffold(",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 7,
+      "secondFile": {
+        "end": 174,
+        "endLoc": {
+          "column": 10,
+          "line": 174,
+          "position": 5481
+        },
+        "name": "presentation\\screens\\quiz_screen.dart",
+        "start": 168,
+        "startLoc": {
+          "column": 10,
+          "line": 168,
+          "position": 5209
+        }
+      },
+      "tokens": 50
+    },
+    {
+      "firstFile": {
+        "end": 114,
+        "endLoc": {
+          "column": 10,
+          "line": 114,
+          "position": 3895
+        },
+        "name": "presentation\\screens\\auth_screen.dart",
+        "start": 108,
+        "startLoc": {
+          "column": 4,
+          "line": 108,
+          "position": 3617
+        }
+      },
+      "format": "dart",
+      "fragment": "    final cardColor = AppTheme.cardColor(context);\n    final textColor = AppTheme.textColor(context);\n    final subTextColor = AppTheme.subTextColor(context);\n    final borderColor = AppTheme.borderColor(context);\n    final primaryColor = AppTheme.primaryColor(context);\n\n    return Scaffold(",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 7,
+      "secondFile": {
+        "end": 51,
+        "endLoc": {
+          "column": 10,
+          "line": 51,
+          "position": 1468
+        },
+        "name": "presentation\\widgets\\dashboard\\study_stats_card.dart",
+        "start": 45,
+        "startLoc": {
+          "column": 4,
+          "line": 45,
+          "position": 1190
+        }
+      },
+      "tokens": 51
+    },
+    {
+      "firstFile": {
+        "end": 211,
+        "endLoc": {
+          "column": 39,
+          "line": 211,
+          "position": 8241
+        },
+        "name": "presentation\\screens\\auth_screen.dart",
+        "start": 203,
+        "startLoc": {
+          "column": 54,
+          "line": 203,
+          "position": 7789
+        }
+      },
+      "format": "dart",
+      "fragment": "                      padding: const EdgeInsets.all(24),\n                      decoration: BoxDecoration(\n                        color: cardColor,\n                        borderRadius: BorderRadius.circular(24),\n                        border: Border.all(color: borderColor, width: 1),\n                        boxShadow: [\n                          BoxShadow(\n                            color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.03),\n                            blurRadius: 24,",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 215,
+        "endLoc": {
+          "column": 29,
+          "line": 215,
+          "position": 7070
+        },
+        "name": "presentation\\screens\\quiz_screen.dart",
+        "start": 207,
+        "startLoc": {
+          "column": 44,
+          "line": 207,
+          "position": 6698
+        }
+      },
+      "tokens": 63
+    },
+    {
+      "firstFile": {
+        "end": 211,
+        "endLoc": {
+          "column": 39,
+          "line": 211,
+          "position": 8241
+        },
+        "name": "presentation\\screens\\auth_screen.dart",
+        "start": 203,
+        "startLoc": {
+          "column": 22,
+          "line": 203,
+          "position": 7757
+        }
+      },
+      "format": "dart",
+      "fragment": "                      padding: const EdgeInsets.all(24),\n                      decoration: BoxDecoration(\n                        color: cardColor,\n                        borderRadius: BorderRadius.circular(24),\n                        border: Border.all(color: borderColor, width: 1),\n                        boxShadow: [\n                          BoxShadow(\n                            color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.03),\n                            blurRadius: 24,",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 180,
+        "endLoc": {
+          "column": 43,
+          "line": 180,
+          "position": 6647
+        },
+        "name": "presentation\\screens\\vocab_detail_screen.dart",
+        "start": 172,
+        "startLoc": {
+          "column": 26,
+          "line": 172,
+          "position": 6131
+        }
+      },
+      "tokens": 71
+    },
+    {
+      "firstFile": {
+        "end": 104,
+        "endLoc": {
+          "column": 21,
+          "line": 104,
+          "position": 3218
+        },
+        "name": "presentation\\screens\\bookmarks_screen.dart",
+        "start": 95,
+        "startLoc": {
+          "column": 10,
+          "line": 95,
+          "position": 2798
+        }
+      },
+      "format": "dart",
+      "fragment": "    final cardColor = AppTheme.cardColor(context);\n    final textColor = AppTheme.textColor(context);\n    final subTextColor = AppTheme.subTextColor(context);\n    final borderColor = AppTheme.borderColor(context);\n    final primaryColor = AppTheme.primaryColor(context);\n    final softBg = AppTheme.softBgColor(context);\n\n    return Scaffold(\n      backgroundColor: Theme.of(context).scaffoldBackgroundColor,\n      appBar: AppBar(",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 213,
+        "endLoc": {
+          "column": 21,
+          "line": 213,
+          "position": 6451
+        },
+        "name": "presentation\\screens\\dashboard_screen.dart",
+        "start": 204,
+        "startLoc": {
+          "column": 10,
+          "line": 204,
+          "position": 6031
+        }
+      },
+      "tokens": 77
+    },
+    {
+      "firstFile": {
+        "end": 105,
+        "endLoc": {
+          "column": 20,
+          "line": 105,
+          "position": 3239
+        },
+        "name": "presentation\\screens\\bookmarks_screen.dart",
+        "start": 95,
+        "startLoc": {
+          "column": 10,
+          "line": 95,
+          "position": 2798
+        }
+      },
+      "format": "dart",
+      "fragment": "    final cardColor = AppTheme.cardColor(context);\n    final textColor = AppTheme.textColor(context);\n    final subTextColor = AppTheme.subTextColor(context);\n    final borderColor = AppTheme.borderColor(context);\n    final primaryColor = AppTheme.primaryColor(context);\n    final softBg = AppTheme.softBgColor(context);\n\n    return Scaffold(\n      backgroundColor: Theme.of(context).scaffoldBackgroundColor,\n      appBar: AppBar(\n        title: Text('Từ Vựng Đã Lưu', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor)),",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 80,
+        "endLoc": {
+          "column": 20,
+          "line": 80,
+          "position": 2393
+        },
+        "name": "presentation\\screens\\vocab_detail_screen.dart",
+        "start": 70,
+        "startLoc": {
+          "column": 10,
+          "line": 70,
+          "position": 1952
+        }
+      },
+      "tokens": 81
+    },
+    {
+      "firstFile": {
+        "end": 204,
+        "endLoc": {
+          "column": 52,
+          "line": 204,
+          "position": 7782
+        },
+        "name": "presentation\\screens\\bookmarks_screen.dart",
+        "start": 194,
+        "startLoc": {
+          "column": 70,
+          "line": 194,
+          "position": 7219
+        }
+      },
+      "format": "dart",
+      "fragment": "                                borderRadius: BorderRadius.circular(18),\n                                border: Border.all(color: borderColor, width: 1),\n                              ),\n                              child: ListTile(\n                                leading: Container(\n                                  padding: const EdgeInsets.all(8),\n                                  decoration: BoxDecoration(\n                                    color: softBg,\n                                    borderRadius: BorderRadius.circular(12),\n                                  ),\n                                  child: Icon(Icons.star_rounded, color: primaryColor),",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 1028,
+        "endLoc": {
+          "column": 44,
+          "line": 1028,
+          "position": 35473
+        },
+        "name": "presentation\\screens\\dashboard_screen.dart",
+        "start": 1018,
+        "startLoc": {
+          "column": 62,
+          "line": 1018,
+          "position": 34990
+        }
+      },
+      "tokens": 62
+    },
+    {
+      "firstFile": {
+        "end": 100,
+        "endLoc": {
+          "column": 14,
+          "line": 100,
+          "position": 3195
+        },
+        "name": "presentation\\screens\\custom_review_screen.dart",
+        "start": 90,
+        "startLoc": {
+          "column": 10,
+          "line": 90,
+          "position": 2736
+        }
+      },
+      "format": "dart",
+      "fragment": "    final textColor = AppTheme.textColor(context);\n    final subTextColor = AppTheme.subTextColor(context);\n    final borderColor = AppTheme.borderColor(context);\n    final primaryColor = AppTheme.primaryColor(context);\n    final softBg = AppTheme.softBgColor(context);\n    final isAutoPlay = context.watch<SettingsCubit>().state.autoPlayAudio;\n\n    return Scaffold(\n      backgroundColor: Theme.of(context).scaffoldBackgroundColor,\n      appBar: AppBar(\n        title: Row(",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 52,
+        "endLoc": {
+          "column": 14,
+          "line": 52,
+          "position": 1913
+        },
+        "name": "presentation\\screens\\flashcard_study_screen.dart",
+        "start": 42,
+        "startLoc": {
+          "column": 10,
+          "line": 42,
+          "position": 1454
+        }
+      },
+      "tokens": 85
+    },
+    {
+      "firstFile": {
+        "end": 118,
+        "endLoc": {
+          "column": 32,
+          "line": 118,
+          "position": 3824
+        },
+        "name": "presentation\\screens\\custom_review_screen.dart",
+        "start": 109,
+        "startLoc": {
+          "column": 9,
+          "line": 109,
+          "position": 3521
+        }
+      },
+      "format": "dart",
+      "fragment": "        ),\n      ),\n      body: BlocBuilder<FlashcardBloc, FlashcardState>(\n        builder: (context, state) {\n          if (state is FlashcardLoading) {\n            return const Center(child: CircularProgressIndicator());\n          }\n\n          if (state is FlashcardFailure) {\n            return Center(child: Text('Lỗi: ${state.message}'));",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 74,
+        "endLoc": {
+          "column": 20,
+          "line": 74,
+          "position": 2695
+        },
+        "name": "presentation\\screens\\flashcard_study_screen.dart",
+        "start": 64,
+        "startLoc": {
+          "column": 9,
+          "line": 64,
+          "position": 2377
+        }
+      },
+      "tokens": 51
+    },
+    {
+      "firstFile": {
+        "end": 349,
+        "endLoc": {
+          "column": 66,
+          "line": 349,
+          "position": 15159
+        },
+        "name": "presentation\\screens\\custom_review_screen.dart",
+        "start": 336,
+        "startLoc": {
+          "column": 128,
+          "line": 336,
+          "position": 14587
+        }
+      },
+      "format": "dart",
+      "fragment": "                                        style: GoogleFonts.outfit(color: subTextColor, fontSize: 13, fontWeight: FontWeight.w600),\n                                      ),\n                                    ],\n                                  ),\n                                ),\n                              ],\n                            ),\n                          ),\n                          back: Container(\n                            width: double.infinity,\n                            padding: const EdgeInsets.all(24),\n                            decoration: BoxDecoration(\n                              color: softBg,\n                              borderRadius: BorderRadius.circular(24),",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 14,
+      "secondFile": {
+        "end": 261,
+        "endLoc": {
+          "column": 62,
+          "line": 261,
+          "position": 10919
+        },
+        "name": "presentation\\screens\\flashcard_study_screen.dart",
+        "start": 248,
+        "startLoc": {
+          "column": 36,
+          "line": 248,
+          "position": 10399
+        }
+      },
+      "tokens": 50
+    },
+    {
+      "firstFile": {
+        "end": 171,
+        "endLoc": {
+          "column": 25,
+          "line": 171,
+          "position": 4970
+        },
+        "name": "presentation\\screens\\dashboard_screen.dart",
+        "start": 157,
+        "startLoc": {
+          "column": 98,
+          "line": 157,
+          "position": 4591
+        }
+      },
+      "format": "dart",
+      "fragment": "        content: const Text('Bạn có chắc muốn xóa toàn bộ lịch sử tra từ không?'),\n        actions: [\n          TextButton(\n            onPressed: () => Navigator.pop(ctx, false),\n            child: const Text('Hủy'),\n          ),\n          TextButton(\n            onPressed: () => Navigator.pop(ctx, true),\n            child: const Text('Xóa', style: TextStyle(color: AppTheme.errorRed)),\n          ),\n        ],\n      ),\n    );\n\n    if (confirmed != true) return;",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 15,
+      "secondFile": {
+        "end": 74,
+        "endLoc": {
+          "column": 25,
+          "line": 74,
+          "position": 2362
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 60,
+        "startLoc": {
+          "column": 142,
+          "line": 60,
+          "position": 1983
+        }
+      },
+      "tokens": 82
+    },
+    {
+      "firstFile": {
+        "end": 165,
+        "endLoc": {
+          "column": 30,
+          "line": 165,
+          "position": 4851
+        },
+        "name": "presentation\\screens\\dashboard_screen.dart",
+        "start": 157,
+        "startLoc": {
+          "column": 98,
+          "line": 157,
+          "position": 4591
+        }
+      },
+      "format": "dart",
+      "fragment": "        content: const Text('Bạn có chắc muốn xóa toàn bộ lịch sử tra từ không?'),\n        actions: [\n          TextButton(\n            onPressed: () => Navigator.pop(ctx, false),\n            child: const Text('Hủy'),\n          ),\n          TextButton(\n            onPressed: () => Navigator.pop(ctx, true),\n            child: const Text('Xóa', style: TextStyle(color: AppTheme.errorRed)),",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 101,
+        "endLoc": {
+          "column": 30,
+          "line": 101,
+          "position": 3309
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 93,
+        "startLoc": {
+          "column": 95,
+          "line": 93,
+          "position": 3049
+        }
+      },
+      "tokens": 54
+    },
+    {
+      "firstFile": {
+        "end": 183,
+        "endLoc": {
+          "column": 3,
+          "line": 183,
+          "position": 5364
+        },
+        "name": "presentation\\screens\\dashboard_screen.dart",
+        "start": 171,
+        "startLoc": {
+          "column": 25,
+          "line": 171,
+          "position": 4970
+        }
+      },
+      "format": "dart",
+      "fragment": "    if (confirmed != true) return;\n\n    final uid = FirebaseAuth.instance.currentUser?.uid;\n    if (uid != null) {\n      await _cloudflareService.clearAllHistory(uid);\n      if (mounted) {\n        context.read<SearchBloc>().add(HistoryLoadRequested());\n        ScaffoldMessenger.of(context).showSnackBar(\n          const SnackBar(content: Text('Đã xóa toàn bộ lịch sử tra từ')),\n        );\n      }\n    }\n  }",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 13,
+      "secondFile": {
+        "end": 86,
+        "endLoc": {
+          "column": 3,
+          "line": 86,
+          "position": 2768
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 74,
+        "startLoc": {
+          "column": 37,
+          "line": 74,
+          "position": 2374
+        }
+      },
+      "tokens": 77
+    },
+    {
+      "firstFile": {
+        "end": 208,
+        "endLoc": {
+          "column": 56,
+          "line": 208,
+          "position": 6291
+        },
+        "name": "presentation\\screens\\dashboard_screen.dart",
+        "start": 202,
+        "startLoc": {
+          "column": 49,
+          "line": 202,
+          "position": 6018
+        }
+      },
+      "format": "dart",
+      "fragment": "    final displayName = _formatUserName(rawEmail);\n\n    final cardColor = AppTheme.cardColor(context);\n    final textColor = AppTheme.textColor(context);\n    final subTextColor = AppTheme.subTextColor(context);\n    final borderColor = AppTheme.borderColor(context);\n    final primaryColor = AppTheme.primaryColor(context);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 7,
+      "secondFile": {
+        "end": 172,
+        "endLoc": {
+          "column": 56,
+          "line": 172,
+          "position": 5469
+        },
+        "name": "presentation\\screens\\quiz_screen.dart",
+        "start": 166,
+        "startLoc": {
+          "column": 46,
+          "line": 166,
+          "position": 5196
+        }
+      },
+      "tokens": 51
+    },
+    {
+      "firstFile": {
+        "end": 398,
+        "endLoc": {
+          "column": 41,
+          "line": 398,
+          "position": 13198
+        },
+        "name": "presentation\\screens\\dashboard_screen.dart",
+        "start": 392,
+        "startLoc": {
+          "column": 14,
+          "line": 392,
+          "position": 12867
+        }
+      },
+      "format": "dart",
+      "fragment": "              Text(\n                'Công cụ học tập 🚀',\n                style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),\n              ),\n              const SizedBox(height: 12),\n              _buildBentoQuickActionsGrid(context, primaryColor, softBg),\n              const SizedBox(height: 28),",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 7,
+      "secondFile": {
+        "end": 510,
+        "endLoc": {
+          "column": 35,
+          "line": 510,
+          "position": 16955
+        },
+        "name": "presentation\\screens\\dashboard_screen.dart",
+        "start": 504,
+        "startLoc": {
+          "column": 8,
+          "line": 504,
+          "position": 16660
+        }
+      },
+      "tokens": 52
+    },
+    {
+      "firstFile": {
+        "end": 446,
+        "endLoc": {
+          "column": 16,
+          "line": 446,
+          "position": 14854
+        },
+        "name": "presentation\\screens\\dashboard_screen.dart",
+        "start": 435,
+        "startLoc": {
+          "column": 14,
+          "line": 435,
+          "position": 14365
+        }
+      },
+      "format": "dart",
+      "fragment": "              Text(\n                'Tiến trình Ghi nhớ (SM-2) 📊',\n                style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),\n              ),\n              const SizedBox(height: 10),\n              StudyStatsCard(\n                loadingStats: _loadingStats,\n                totalCards: _totalCards,\n                newCards: _newCards,\n                learningCards: _learningCards,\n                memorizedCards: _memorizedCards,\n              ),",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 12,
+      "secondFile": {
+        "end": 500,
+        "endLoc": {
+          "column": 10,
+          "line": 500,
+          "position": 16591
+        },
+        "name": "presentation\\screens\\dashboard_screen.dart",
+        "start": 489,
+        "startLoc": {
+          "column": 8,
+          "line": 489,
+          "position": 16168
+        }
+      },
+      "tokens": 59
+    },
+    {
+      "firstFile": {
+        "end": 243,
+        "endLoc": {
+          "column": 50,
+          "line": 243,
+          "position": 8694
+        },
+        "name": "presentation\\screens\\friends_screen.dart",
+        "start": 233,
+        "startLoc": {
+          "column": 9,
+          "line": 233,
+          "position": 8405
+        }
+      },
+      "format": "dart",
+      "fragment": "        ),\n      ),\n    );\n  }\n\n  @override\n  Widget build(BuildContext context) {\n    final textColor = AppTheme.textColor(context);\n    final subTextColor = AppTheme.subTextColor(context);\n    final primaryColor = AppTheme.primaryColor(context);\n    final cardColor = AppTheme.cardColor(context);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 171,
+        "endLoc": {
+          "column": 50,
+          "line": 171,
+          "position": 5061
+        },
+        "name": "presentation\\screens\\group_leaderboard_screen.dart",
+        "start": 161,
+        "startLoc": {
+          "column": 9,
+          "line": 161,
+          "position": 4772
+        }
+      },
+      "tokens": 55
+    },
+    {
+      "firstFile": {
+        "end": 243,
+        "endLoc": {
+          "column": 50,
+          "line": 243,
+          "position": 8694
+        },
+        "name": "presentation\\screens\\friends_screen.dart",
+        "start": 233,
+        "startLoc": {
+          "column": 9,
+          "line": 233,
+          "position": 8405
+        }
+      },
+      "format": "dart",
+      "fragment": "        ),\n      ),\n    );\n  }\n\n  @override\n  Widget build(BuildContext context) {\n    final textColor = AppTheme.textColor(context);\n    final subTextColor = AppTheme.subTextColor(context);\n    final primaryColor = AppTheme.primaryColor(context);\n    final cardColor = AppTheme.cardColor(context);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 227,
+        "endLoc": {
+          "column": 50,
+          "line": 227,
+          "position": 5875
+        },
+        "name": "presentation\\screens\\word_battle_screen.dart",
+        "start": 217,
+        "startLoc": {
+          "column": 43,
+          "line": 217,
+          "position": 5586
+        }
+      },
+      "tokens": 55
+    },
+    {
+      "firstFile": {
+        "end": 173,
+        "endLoc": {
+          "column": 9,
+          "line": 173,
+          "position": 5072
+        },
+        "name": "presentation\\screens\\group_leaderboard_screen.dart",
+        "start": 166,
+        "startLoc": {
+          "column": 2,
+          "line": 166,
+          "position": 4797
+        }
+      },
+      "format": "dart",
+      "fragment": "  @override\n  Widget build(BuildContext context) {\n    final textColor = AppTheme.textColor(context);\n    final subTextColor = AppTheme.subTextColor(context);\n    final primaryColor = AppTheme.primaryColor(context);\n    final cardColor = AppTheme.cardColor(context);\n\n    final currentGroup = _groups[_selectedGroupIdx];",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 8,
+      "secondFile": {
+        "end": 228,
+        "endLoc": {
+          "column": 9,
+          "line": 228,
+          "position": 5885
+        },
+        "name": "presentation\\screens\\word_battle_screen.dart",
+        "start": 222,
+        "startLoc": {
+          "column": 2,
+          "line": 222,
+          "position": 5611
+        }
+      },
+      "tokens": 50
+    },
+    {
+      "firstFile": {
+        "end": 72,
+        "endLoc": {
+          "column": 31,
+          "line": 72,
+          "position": 2096
+        },
+        "name": "presentation\\screens\\ocr_translator_screen.dart",
+        "start": 66,
+        "startLoc": {
+          "column": 10,
+          "line": 66,
+          "position": 1882
+        }
+      },
+      "format": "dart",
+      "fragment": "      if (mounted) {\n        context.read<OcrBloc>().add(OcrImageProcessed(image.path));\n      }\n    } catch (e) {\n      if (!mounted) return;\n      ScaffoldMessenger.of(context).showSnackBar(\n        SnackBar(content: Text('Lỗi chụp ảnh: $e')),",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 7,
+      "secondFile": {
+        "end": 87,
+        "endLoc": {
+          "column": 31,
+          "line": 87,
+          "position": 2570
+        },
+        "name": "presentation\\screens\\ocr_translator_screen.dart",
+        "start": 81,
+        "startLoc": {
+          "column": 27,
+          "line": 81,
+          "position": 2356
+        }
+      },
+      "tokens": 51
+    },
+    {
+      "firstFile": {
+        "end": 220,
+        "endLoc": {
+          "column": 26,
+          "line": 220,
+          "position": 7197
+        },
+        "name": "presentation\\screens\\quiz_screen.dart",
+        "start": 210,
+        "startLoc": {
+          "column": 41,
+          "line": 210,
+          "position": 6813
+        }
+      },
+      "format": "dart",
+      "fragment": "              borderRadius: BorderRadius.circular(24),\n              border: Border.all(color: borderColor, width: 1),\n              boxShadow: [\n                BoxShadow(\n                  color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.03),\n                  blurRadius: 16,\n                  offset: const Offset(0, 4),\n                )\n              ],\n            ),\n            child: Column(",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 185,
+        "endLoc": {
+          "column": 40,
+          "line": 185,
+          "position": 6844
+        },
+        "name": "presentation\\screens\\vocab_detail_screen.dart",
+        "start": 175,
+        "startLoc": {
+          "column": 55,
+          "line": 175,
+          "position": 6320
+        }
+      },
+      "tokens": 70
+    },
+    {
+      "firstFile": {
+        "end": 221,
+        "endLoc": {
+          "column": 25,
+          "line": 221,
+          "position": 7223
+        },
+        "name": "presentation\\screens\\quiz_screen.dart",
+        "start": 210,
+        "startLoc": {
+          "column": 52,
+          "line": 210,
+          "position": 6824
+        }
+      },
+      "format": "dart",
+      "fragment": "              borderRadius: BorderRadius.circular(24),\n              border: Border.all(color: borderColor, width: 1),\n              boxShadow: [\n                BoxShadow(\n                  color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.03),\n                  blurRadius: 16,\n                  offset: const Offset(0, 4),\n                )\n              ],\n            ),\n            child: Column(\n              children: [",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 12,
+      "secondFile": {
+        "end": 66,
+        "endLoc": {
+          "column": 19,
+          "line": 66,
+          "position": 1959
+        },
+        "name": "presentation\\widgets\\dashboard\\study_stats_card.dart",
+        "start": 55,
+        "startLoc": {
+          "column": 46,
+          "line": 55,
+          "position": 1626
+        }
+      },
+      "tokens": 70
+    },
+    {
+      "firstFile": {
+        "end": 222,
+        "endLoc": {
+          "column": 20,
+          "line": 222,
+          "position": 7244
+        },
+        "name": "presentation\\screens\\quiz_screen.dart",
+        "start": 212,
+        "startLoc": {
+          "column": 23,
+          "line": 212,
+          "position": 6914
+        }
+      },
+      "format": "dart",
+      "fragment": "              boxShadow: [\n                BoxShadow(\n                  color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.03),\n                  blurRadius: 16,\n                  offset: const Offset(0, 4),\n                )\n              ],\n            ),\n            child: Column(\n              children: [\n                Text(",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 67,
+        "endLoc": {
+          "column": 13,
+          "line": 67,
+          "position": 1973
+        },
+        "name": "presentation\\widgets\\dashboard\\study_stats_card.dart",
+        "start": 57,
+        "startLoc": {
+          "column": 17,
+          "line": 57,
+          "position": 1704
+        }
+      },
+      "tokens": 52
+    },
+    {
+      "firstFile": {
+        "end": 147,
+        "endLoc": {
+          "column": 20,
+          "line": 147,
+          "position": 4893
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 139,
+        "startLoc": {
+          "column": 45,
+          "line": 139,
+          "position": 4582
+        }
+      },
+      "format": "dart",
+      "fragment": "            _buildSectionHeader('Giao diện', subColor),\n            const SizedBox(height: 10),\n            Container(\n              decoration: BoxDecoration(\n                color: cardColor,\n                borderRadius: BorderRadius.circular(20),\n                border: Border.all(color: borderColor, width: 1),\n              ),\n              child: BlocBuilder<SettingsCubit, SettingsState>(",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 179,
+        "endLoc": {
+          "column": 20,
+          "line": 179,
+          "position": 6276
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 171,
+        "startLoc": {
+          "column": 45,
+          "line": 171,
+          "position": 5965
+        }
+      },
+      "tokens": 50
+    },
+    {
+      "firstFile": {
+        "end": 147,
+        "endLoc": {
+          "column": 20,
+          "line": 147,
+          "position": 4893
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 139,
+        "startLoc": {
+          "column": 45,
+          "line": 139,
+          "position": 4582
+        }
+      },
+      "format": "dart",
+      "fragment": "            _buildSectionHeader('Giao diện', subColor),\n            const SizedBox(height: 10),\n            Container(\n              decoration: BoxDecoration(\n                color: cardColor,\n                borderRadius: BorderRadius.circular(20),\n                border: Border.all(color: borderColor, width: 1),\n              ),\n              child: BlocBuilder<SettingsCubit, SettingsState>(",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 259,
+        "endLoc": {
+          "column": 20,
+          "line": 259,
+          "position": 10193
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 251,
+        "startLoc": {
+          "column": 45,
+          "line": 251,
+          "position": 9882
+        }
+      },
+      "tokens": 50
+    },
+    {
+      "firstFile": {
+        "end": 147,
+        "endLoc": {
+          "column": 20,
+          "line": 147,
+          "position": 4893
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 139,
+        "startLoc": {
+          "column": 45,
+          "line": 139,
+          "position": 4582
+        }
+      },
+      "format": "dart",
+      "fragment": "            _buildSectionHeader('Giao diện', subColor),\n            const SizedBox(height: 10),\n            Container(\n              decoration: BoxDecoration(\n                color: cardColor,\n                borderRadius: BorderRadius.circular(20),\n                border: Border.all(color: borderColor, width: 1),\n              ),\n              child: BlocBuilder<SettingsCubit, SettingsState>(",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 322,
+        "endLoc": {
+          "column": 20,
+          "line": 322,
+          "position": 12972
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 314,
+        "startLoc": {
+          "column": 45,
+          "line": 314,
+          "position": 12661
+        }
+      },
+      "tokens": 50
+    },
+    {
+      "firstFile": {
+        "end": 147,
+        "endLoc": {
+          "column": 20,
+          "line": 147,
+          "position": 4893
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 139,
+        "startLoc": {
+          "column": 45,
+          "line": 139,
+          "position": 4582
+        }
+      },
+      "format": "dart",
+      "fragment": "            _buildSectionHeader('Giao diện', subColor),\n            const SizedBox(height: 10),\n            Container(\n              decoration: BoxDecoration(\n                color: cardColor,\n                borderRadius: BorderRadius.circular(20),\n                border: Border.all(color: borderColor, width: 1),\n              ),\n              child: BlocBuilder<SettingsCubit, SettingsState>(",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 370,
+        "endLoc": {
+          "column": 20,
+          "line": 370,
+          "position": 15088
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 362,
+        "startLoc": {
+          "column": 46,
+          "line": 362,
+          "position": 14777
+        }
+      },
+      "tokens": 50
+    },
+    {
+      "firstFile": {
+        "end": 147,
+        "endLoc": {
+          "column": 20,
+          "line": 147,
+          "position": 4893
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 139,
+        "startLoc": {
+          "column": 45,
+          "line": 139,
+          "position": 4582
+        }
+      },
+      "format": "dart",
+      "fragment": "            _buildSectionHeader('Giao diện', subColor),\n            const SizedBox(height: 10),\n            Container(\n              decoration: BoxDecoration(\n                color: cardColor,\n                borderRadius: BorderRadius.circular(20),\n                border: Border.all(color: borderColor, width: 1),\n              ),\n              child: BlocBuilder<SettingsCubit, SettingsState>(",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 401,
+        "endLoc": {
+          "column": 20,
+          "line": 401,
+          "position": 16391
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 393,
+        "startLoc": {
+          "column": 51,
+          "line": 393,
+          "position": 16080
+        }
+      },
+      "tokens": 50
+    },
+    {
+      "firstFile": {
+        "end": 180,
+        "endLoc": {
+          "column": 27,
+          "line": 180,
+          "position": 6312
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 171,
+        "startLoc": {
+          "column": 47,
+          "line": 171,
+          "position": 5967
+        }
+      },
+      "format": "dart",
+      "fragment": "            _buildSectionHeader('Học tập', subColor),\n            const SizedBox(height: 10),\n            Container(\n              decoration: BoxDecoration(\n                color: cardColor,\n                borderRadius: BorderRadius.circular(20),\n                border: Border.all(color: borderColor, width: 1),\n              ),\n              child: Column(\n                children: [",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 260,
+        "endLoc": {
+          "column": 27,
+          "line": 260,
+          "position": 10229
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 251,
+        "startLoc": {
+          "column": 47,
+          "line": 251,
+          "position": 9884
+        }
+      },
+      "tokens": 54
+    },
+    {
+      "firstFile": {
+        "end": 180,
+        "endLoc": {
+          "column": 27,
+          "line": 180,
+          "position": 6312
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 171,
+        "startLoc": {
+          "column": 47,
+          "line": 171,
+          "position": 5967
+        }
+      },
+      "format": "dart",
+      "fragment": "            _buildSectionHeader('Học tập', subColor),\n            const SizedBox(height: 10),\n            Container(\n              decoration: BoxDecoration(\n                color: cardColor,\n                borderRadius: BorderRadius.circular(20),\n                border: Border.all(color: borderColor, width: 1),\n              ),\n              child: Column(\n                children: [",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 402,
+        "endLoc": {
+          "column": 27,
+          "line": 402,
+          "position": 16427
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 393,
+        "startLoc": {
+          "column": 53,
+          "line": 393,
+          "position": 16082
+        }
+      },
+      "tokens": 54
+    },
+    {
+      "firstFile": {
+        "end": 296,
+        "endLoc": {
+          "column": 46,
+          "line": 296,
+          "position": 11908
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 289,
+        "startLoc": {
+          "column": 18,
+          "line": 289,
+          "position": 11543
+        }
+      },
+      "format": "dart",
+      "fragment": "                  ListTile(\n                    leading: Container(\n                      padding: const EdgeInsets.all(10),\n                      decoration: BoxDecoration(\n                        color: AppTheme.errorRed.withValues(alpha: 0.1),\n                        borderRadius: BorderRadius.circular(12),\n                      ),\n                      child: const Icon(Icons.delete_sweep_rounded, color: AppTheme.errorRed, size: 24),",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 8,
+      "secondFile": {
+        "end": 377,
+        "endLoc": {
+          "column": 42,
+          "line": 377,
+          "position": 15426
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 370,
+        "startLoc": {
+          "column": 21,
+          "line": 370,
+          "position": 15089
+        }
+      },
+      "tokens": 51
+    },
+    {
+      "firstFile": {
+        "end": 326,
+        "endLoc": {
+          "column": 26,
+          "line": 326,
+          "position": 13143
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 314,
+        "startLoc": {
+          "column": 47,
+          "line": 314,
+          "position": 12663
+        }
+      },
+      "format": "dart",
+      "fragment": "            _buildSectionHeader('Thông báo', subColor),\n            const SizedBox(height: 10),\n            Container(\n              decoration: BoxDecoration(\n                color: cardColor,\n                borderRadius: BorderRadius.circular(20),\n                border: Border.all(color: borderColor, width: 1),\n              ),\n              child: ListTile(\n                leading: Container(\n                  padding: const EdgeInsets.all(10),\n                  decoration: BoxDecoration(\n                    color: softBg,",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 13,
+      "secondFile": {
+        "end": 374,
+        "endLoc": {
+          "column": 26,
+          "line": 374,
+          "position": 15259
+        },
+        "name": "presentation\\screens\\settings_screen.dart",
+        "start": 362,
+        "startLoc": {
+          "column": 48,
+          "line": 362,
+          "position": 14779
+        }
+      },
+      "tokens": 71
+    },
+    {
+      "firstFile": {
+        "end": 186,
+        "endLoc": {
+          "column": 67,
+          "line": 186,
+          "position": 6912
+        },
+        "name": "presentation\\screens\\vocab_detail_screen.dart",
+        "start": 177,
+        "startLoc": {
+          "column": 37,
+          "line": 177,
+          "position": 6449
+        }
+      },
+      "format": "dart",
+      "fragment": "                            boxShadow: [\n                              BoxShadow(\n                                color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.03),\n                                blurRadius: 16,\n                                offset: const Offset(0, 4),\n                              )\n                            ],\n                          ),\n                          child: Column(\n                            crossAxisAlignment: CrossAxisAlignment.center,",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 47,
+        "endLoc": {
+          "column": 49,
+          "line": 47,
+          "position": 1588
+        },
+        "name": "presentation\\widgets\\dashboard\\word_of_day_card.dart",
+        "start": 38,
+        "startLoc": {
+          "column": 19,
+          "line": 38,
+          "position": 1287
+        }
+      },
+      "tokens": 53
+    },
+    {
+      "firstFile": {
+        "end": 65,
+        "endLoc": {
+          "column": 20,
+          "line": 65,
+          "position": 1939
+        },
+        "name": "presentation\\widgets\\dashboard\\study_stats_card.dart",
+        "start": 52,
+        "startLoc": {
+          "column": 6,
+          "line": 52,
+          "position": 1486
+        }
+      },
+      "format": "dart",
+      "fragment": "      padding: const EdgeInsets.all(20),\n      decoration: BoxDecoration(\n        color: cardColor,\n        borderRadius: BorderRadius.circular(20),\n        border: Border.all(color: borderColor, width: 1),\n        boxShadow: [\n          BoxShadow(\n            color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.03),\n            blurRadius: 16,\n            offset: const Offset(0, 4),\n          )\n        ],\n      ),\n      child: Column(",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 14,
+      "secondFile": {
+        "end": 46,
+        "endLoc": {
+          "column": 22,
+          "line": 46,
+          "position": 1538
+        },
+        "name": "presentation\\widgets\\dashboard\\word_of_day_card.dart",
+        "start": 33,
+        "startLoc": {
+          "column": 8,
+          "line": 33,
+          "position": 1059
+        }
+      },
+      "tokens": 92
+    },
+    {
+      "firstFile": {
+        "end": 130,
+        "endLoc": {
+          "column": 76,
+          "line": 130,
+          "position": 4462
+        },
+        "name": "services\\cloudflare_service.dart",
+        "start": 123,
+        "startLoc": {
+          "column": 41,
+          "line": 123,
+          "position": 4209
+        }
+      },
+      "format": "dart",
+      "fragment": "    final data = await _get('/flashcards');\n    final vocabsJson = (data['vocabs'] as List<dynamic>?) ?? [];\n    return vocabsJson\n        .map((j) => Vocab.fromJson(j as Map<String, dynamic>))\n        .toList();\n  }\n\n  /// Lấy các thẻ flashcard đến hạn ôn tập (nextReview <= now).",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 8,
+      "secondFile": {
+        "end": 139,
+        "endLoc": {
+          "column": 49,
+          "line": 139,
+          "position": 4789
+        },
+        "name": "services\\cloudflare_service.dart",
+        "start": 132,
+        "startLoc": {
+          "column": 45,
+          "line": 132,
+          "position": 4563
+        }
+      },
+      "tokens": 52
+    },
+    {
+      "firstFile": {
+        "end": 98,
+        "endLoc": {
+          "column": 13,
+          "line": 98,
+          "position": 4346
+        },
+        "name": "components\\Sidebar.tsx",
+        "start": 70,
+        "startLoc": {
+          "column": 23,
+          "line": 70,
+          "position": 2774
+        }
+      },
+      "format": "tsx",
+      "fragment": "          {mainNavItems.map((item) => {\n            const isActive = activeTab === item.id;\n            return (\n              <button\n                key={item.id}\n                onClick={() => onTabChange(item.id)}\n                aria-current={isActive ? 'page' : undefined}\n                className={`flex items-center gap-3 h-[42px] px-3.5 rounded-xl text-[13.5px] font-semibold transition-all duration-200 text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5] focus-visible:ring-offset-2 ${\n                  isActive\n                    ? 'bg-white dark:bg-[#1E293B] text-[#4F46E5] dark:text-[#818CF8] shadow-sm ring-1 ring-[#E2E8F5] dark:ring-[#334155]'\n                    : 'text-[#334155] dark:text-[#CBD5E1] hover:bg-white/60 dark:hover:bg-[#1E293B]/60 hover:text-[#4F46E5] dark:hover:text-[#818CF8]'\n                }`}\n              >\n                <span\n                  className={`transition-colors duration-200 ${\n                    isActive\n                      ? 'text-[#4F46E5] dark:text-[#818CF8]'\n                      : 'text-[#64748B] dark:text-[#94A3B8] group-hover:text-[#4F46E5] dark:group-hover:text-[#818CF8]'\n                  }`}\n                >\n                  {iconMap[item.iconName]}\n                </span>\n                <span className=\"flex-1 tracking-tight\">{item.label}</span>\n                {isActive && (\n                  <span className=\"w-1.5 h-1.5 rounded-full bg-[#4F46E5] dark:bg-[#818CF8] shadow-xs animate-pulse-glow\" />\n                )}\n              </button>\n            );\n          })}",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 29,
+      "secondFile": {
+        "end": 133,
+        "endLoc": {
+          "column": 13,
+          "line": 133,
+          "position": 6200
+        },
+        "name": "components\\Sidebar.tsx",
+        "start": 105,
+        "startLoc": {
+          "column": 28,
+          "line": 105,
+          "position": 4628
+        }
+      },
+      "tokens": 131
+    },
+    {
+      "firstFile": {
+        "end": 122,
+        "endLoc": {
+          "column": 5,
+          "line": 122,
+          "position": 4381
+        },
+        "name": "components\\views\\AdminEventsView.tsx",
+        "start": 110,
+        "startLoc": {
+          "column": 92,
+          "line": 110,
+          "position": 3909
+        }
+      },
+      "format": "tsx",
+      "fragment": "  const [formData, setFormData] = useState<Omit<CommunityEvent, 'id' | 'participantsCount'>>({\n    title: '',\n    category: 'Marathon',\n    description: '',\n    bannerUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=800',\n    startDate: new Date().toISOString().split('T')[0],\n    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],\n    targetWords: 40,\n    xpReward: 500,\n    badgeName: 'Chiến Binh LexiFlow',\n    targetAudience: 'Tất cả học viên',\n    status: 'active'\n  });",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 13,
+      "secondFile": {
+        "end": 143,
+        "endLoc": {
+          "column": 7,
+          "line": 143,
+          "position": 5083
+        },
+        "name": "components\\views\\AdminEventsView.tsx",
+        "start": 131,
+        "startLoc": {
+          "column": 15,
+          "line": 131,
+          "position": 4587
+        }
+      },
+      "tokens": 93
+    },
+    {
+      "firstFile": {
+        "end": 157,
+        "endLoc": {
+          "column": 22,
+          "line": 157,
+          "position": 5278
+        },
+        "name": "components\\views\\FriendsView.tsx",
+        "start": 147,
+        "startLoc": {
+          "column": 137,
+          "line": 147,
+          "position": 4846
+        }
+      },
+      "format": "tsx",
+      "fragment": "    <div className=\"flex flex-col gap-6 w-full max-w-[1400px] mx-auto animate-fade-in font-sans text-[#0F172A] dark:text-[#F8FAFC] pb-12\">\n      {/* Toast Alert */}\n      {toastMessage && (\n        <div className=\"fixed top-6 right-6 z-50 bg-[#0F172A] text-white px-5 py-3.5 rounded-2xl shadow-xl border border-white/10 flex items-center gap-3 animate-pop-in\">\n          <Sparkles className=\"w-5 h-5 text-[#4F46E5]\" />\n          <span className=\"text-[13.5px] font-semibold\">{toastMessage}</span>\n        </div>\n      )}\n\n      {/* Top Banner */}\n      <Card className=\"p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden\">",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 194,
+        "endLoc": {
+          "column": 22,
+          "line": 194,
+          "position": 5984
+        },
+        "name": "components\\views\\GroupsLeaderboardView.tsx",
+        "start": 184,
+        "startLoc": {
+          "column": 137,
+          "line": 184,
+          "position": 5545
+        }
+      },
+      "tokens": 52
+    }
+  ],
+  "statistics": {
+    "detectionDate": "2026-10-01T09:07:22.220Z",
+    "formats": {
+      "css": {
+        "clones": 0,
+        "duplicatedLines": 0,
+        "duplicatedTokens": 0,
+        "lines": 347,
+        "newClones": 0,
+        "newDuplicatedLines": 0,
+        "percentage": 0.0,
+        "percentageTokens": 0.0,
+        "sources": 2,
+        "tokens": 2107
+      },
+      "dart": {
+        "clones": 43,
+        "duplicatedLines": 440,
+        "duplicatedTokens": 2595,
+        "lines": 8641,
+        "newClones": 0,
+        "newDuplicatedLines": 0,
+        "percentage": 5.092003240365699,
+        "percentageTokens": 5.7693590342159675,
+        "sources": 35,
+        "tokens": 44979
+      },
+      "sql": {
+        "clones": 3,
+        "duplicatedLines": 32,
+        "duplicatedTokens": 217,
+        "lines": 240,
+        "newClones": 0,
+        "newDuplicatedLines": 0,
+        "percentage": 13.333333333333334,
+        "percentageTokens": 16.30353117956424,
+        "sources": 3,
+        "tokens": 1331
+      },
+      "tsx": {
+        "clones": 3,
+        "duplicatedLines": 53,
+        "duplicatedTokens": 276,
+        "lines": 5534,
+        "newClones": 0,
+        "newDuplicatedLines": 0,
+        "percentage": 0.9577159378388146,
+        "percentageTokens": 0.9006363191385218,
+        "sources": 33,
+        "tokens": 30645
+      },
+      "typescript": {
+        "clones": 8,
+        "duplicatedLines": 79,
+        "duplicatedTokens": 569,
+        "lines": 3548,
+        "newClones": 0,
+        "newDuplicatedLines": 0,
+        "percentage": 2.2266065388951524,
+        "percentageTokens": 3.053394150791521,
+        "sources": 21,
+        "tokens": 18635
+      }
+    },
+    "total": {
+      "clones": 57,
+      "duplicatedLines": 604,
+      "duplicatedTokens": 3657,
+      "lines": 18310,
+      "newClones": 0,
+      "newDuplicatedLines": 0,
+      "percentage": 3.298743855816494,
+      "percentageTokens": 3.743206034985721,
+      "sources": 94,
+      "tokens": 97697
+    }
+  }
+}

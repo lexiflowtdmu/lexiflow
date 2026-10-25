@@ -63,6 +63,7 @@ class FlashcardOperationSuccess extends FlashcardState {}
 // --- Bloc ---
 class FlashcardBloc extends Bloc<FlashcardEvent, FlashcardState> {
   final CloudflareService _cloudflareService;
+  int _pendingWaterDrops = 0;
 
   FlashcardBloc({
     required CloudflareService cloudflareService,
@@ -81,12 +82,11 @@ class FlashcardBloc extends Bloc<FlashcardEvent, FlashcardState> {
     }
     emit(FlashcardLoading());
     try {
-      // Get all spaced repetition cards
-      final allVocabs = await _cloudflareService.getSpacedRepetitionVocabs(uid);
-      if (allVocabs.isEmpty) {
+      final dueVocabs = await _cloudflareService.getDueVocabs(uid);
+      if (dueVocabs.isEmpty) {
         emit(FlashcardsEmpty());
       } else {
-        emit(FlashcardsLoadSuccess(allVocabs, 0));
+        emit(FlashcardsLoadSuccess(dueVocabs, 0));
       }
     } catch (e) {
       emit(FlashcardFailure(e.toString()));
@@ -98,25 +98,32 @@ class FlashcardBloc extends Bloc<FlashcardEvent, FlashcardState> {
     if (uid == null) return;
     final currentState = state;
     if (currentState is FlashcardsLoadSuccess) {
-      try {
-        // Calculate the next spaced repetition values using SM-2
-        final updatedVocab = SpacedRepetitionHelper.calculateNextReview(event.vocab, event.quality);
+      // Calculate next SM-2 values immediately (no network needed)
+      final updatedVocab = SpacedRepetitionHelper.calculateNextReview(event.vocab, event.quality);
 
-        // Sync back to Cloudflare D1
-        await _cloudflareService.saveVocabToReview(uid, updatedVocab);
+      // Sync to backend fire-and-forget — UI doesn't wait for this
+      _cloudflareService.saveVocabToReview(uid, updatedVocab).catchError((_) {});
 
-        // Record study streak
-        await _cloudflareService.updateStudyStreak(uid);
+      _pendingWaterDrops++;
 
-        // Move to the next index
-        final int nextIndex = currentState.currentIndex + 1;
-        if (nextIndex >= currentState.vocabs.length) {
-          emit(FlashcardsEmpty());
-        } else {
-          emit(FlashcardsLoadSuccess(currentState.vocabs, nextIndex));
+      // Build the next card list: "Again" re-queues card to end; otherwise advance
+      List<Vocab> nextVocabs = currentState.vocabs;
+      if (event.quality == ReviewQuality.again) {
+        nextVocabs = List.from(currentState.vocabs)..add(event.vocab);
+      }
+
+      final int nextIndex = currentState.currentIndex + 1;
+      if (nextIndex >= nextVocabs.length) {
+        // Session complete — flush streak and water in one go
+        _cloudflareService.updateStudyStreak(uid).catchError((_) {});
+        if (_pendingWaterDrops > 0) {
+          final drops = _pendingWaterDrops;
+          _pendingWaterDrops = 0;
+          _cloudflareService.farmWater(drops).catchError((_) {});
         }
-      } catch (e) {
-        emit(FlashcardFailure(e.toString()));
+        emit(FlashcardsEmpty());
+      } else {
+        emit(FlashcardsLoadSuccess(nextVocabs, nextIndex));
       }
     }
   }

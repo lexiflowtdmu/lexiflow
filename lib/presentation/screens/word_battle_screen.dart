@@ -1,8 +1,14 @@
 import 'dart:async';
+import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/theme/app_theme.dart';
+import 'package:lexiflow/core/theme/app_theme.dart';
+import 'package:lexiflow/core/theme/theme_extension.dart';
+import '../../data/models/vocab_model.dart';
+import '../../services/cloudflare_service.dart';
 
 class BattleQuestion {
   final int index;
@@ -79,7 +85,10 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
     ),
   ];
 
-  final List<BattleQuestion> _questions = [
+  bool _isLoading = true;
+  final List<BattleQuestion> _questions = [];
+
+  static final List<BattleQuestion> _fallbackQuestions = [
     BattleQuestion(
       index: 0,
       word: 'meticulous',
@@ -90,7 +99,7 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
     BattleQuestion(
       index: 1,
       word: 'serendipity',
-      phonetic: '/ˌserənˈdɪpəti/',
+      phonetic: '/ˌ serənˈdɪpəti/',
       correctAnswer: 'Sự tình cờ may mắn',
       options: ['Rủi ro đột ngột', 'Sự tình cờ may mắn', 'Kế hoạch chi tiết', 'Nỗi buồn thầm lặng'],
     ),
@@ -122,6 +131,46 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
     super.initState();
     _mode = widget.mode;
     _roomCode = widget.roomCode ?? (_mode == '1v1' ? 'BTL-8492' : 'ROOM-9102');
+    _loadQuestions();
+  }
+
+  Future<void> _loadQuestions() async {
+    List<Vocab> vocabs = [];
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      try {
+        final service = context.read<CloudflareService>();
+        vocabs = await service.getSpacedRepetitionVocabs(uid);
+      } catch (_) {}
+    }
+
+    if (vocabs.length >= 4) {
+      vocabs.shuffle();
+      final pool = vocabs.take(10).toList();
+      final random = Random();
+      _questions.clear();
+      for (int i = 0; i < pool.length; i++) {
+        final target = pool[i];
+        final distractors = pool
+            .where((v) => v.meaning != target.meaning)
+            .map((v) => v.meaning)
+            .toList()
+          ..shuffle(random);
+        final opts = [target.meaning, ...distractors.take(3)];
+        opts.shuffle(random);
+        _questions.add(BattleQuestion(
+          index: i,
+          word: target.word,
+          phonetic: '',
+          correctAnswer: target.meaning,
+          options: opts,
+        ));
+      }
+    } else {
+      _questions.addAll(_fallbackQuestions);
+    }
+
+    if (mounted) setState(() => _isLoading = false);
   }
 
   @override
@@ -170,6 +219,7 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
   void _handleSelectOption(String option) {
     if (_answered) return;
     _timer?.cancel();
+    HapticFeedback.lightImpact();
 
     final currentQ = _questions[_currentQuestionIndex];
     final isCorrect = option == currentQ.correctAnswer;
@@ -213,7 +263,7 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Đã sao chép mã phòng: $_roomCode'),
-        backgroundColor: AppTheme.primaryColor(context),
+        backgroundColor: context.primaryColor,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -221,19 +271,13 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = AppTheme.textColor(context);
-    final subTextColor = AppTheme.subTextColor(context);
-    final primaryColor = AppTheme.primaryColor(context);
-    final cardColor = AppTheme.cardColor(context);
-    final softBg = AppTheme.softBgColor(context);
-    final borderColor = AppTheme.borderColor(context);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           _mode == '1v1' ? '⚔️ Thách Đấu 1v1' : '🎉 Phòng Đấu Nhóm Kahoot',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.textColor),
         ),
         actions: [
           IconButton(
@@ -243,30 +287,40 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: _gameState == 'lobby'
-            ? _buildLobbyView(textColor, subTextColor, primaryColor, cardColor, softBg, borderColor)
-            : _gameState == 'playing'
-                ? _buildPlayingView(textColor, subTextColor, primaryColor, cardColor, softBg, borderColor)
-                : _buildEndedView(textColor, subTextColor, primaryColor, cardColor, softBg, borderColor),
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                transitionBuilder: (child, animation) =>
+                    FadeTransition(opacity: animation, child: child),
+                child: KeyedSubtree(
+                  key: ValueKey(_gameState),
+                  child: _gameState == 'lobby'
+                      ? _buildLobbyView()
+                      : _gameState == 'playing'
+                          ? _buildPlayingView()
+                          : _buildEndedView(),
+                ),
+              ),
+            ),
     );
   }
 
-  Widget _buildLobbyView(Color textColor, Color subTextColor, Color primaryColor, Color cardColor, Color softBg, Color borderColor) {
+  Widget _buildLobbyView() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: cardColor,
+            color: context.cardColor,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: primaryColor.withValues(alpha: 0.3), width: 1.5),
+            border: Border.all(color: context.primaryColor.withValues(alpha: 0.3), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.2 : 0.04),
+                color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -276,7 +330,7 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
             children: [
               Text(
                 _mode == '1v1' ? 'PHÒNG THÁCH ĐẤU 1v1' : 'PHÒNG ĐẤU NHÓM KAHOOT',
-                style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: primaryColor, letterSpacing: 1.0),
+                style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: context.primaryColor, letterSpacing: 1.0),
               ),
               const SizedBox(height: 12),
               GestureDetector(
@@ -284,19 +338,19 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   decoration: BoxDecoration(
-                    color: softBg,
+                    color: context.softBgColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: borderColor),
+                    border: Border.all(color: context.borderColor),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         _roomCode,
-                        style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w800, color: primaryColor, letterSpacing: 2.0),
+                        style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w800, color: context.primaryColor, letterSpacing: 2.0),
                       ),
                       const SizedBox(width: 10),
-                      Icon(Icons.copy_rounded, color: primaryColor, size: 20),
+                      Icon(Icons.copy_rounded, color: context.primaryColor, size: 20),
                     ],
                   ),
                 ),
@@ -304,7 +358,7 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
               const SizedBox(height: 8),
               Text(
                 'Mời đối thủ hoặc chia sẻ mã này để tham gia trận đấu',
-                style: GoogleFonts.outfit(color: subTextColor, fontSize: 13),
+                style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 13),
               ),
             ],
           ),
@@ -314,7 +368,7 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
         // Joined Players List
         Text(
           'Danh Sách Người Chơi (${_players.length})',
-          style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
+          style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: context.textColor),
         ),
         const SizedBox(height: 12),
         ListView.builder(
@@ -324,14 +378,14 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
           itemBuilder: (context, index) {
             final p = _players[index];
             return Card(
-              color: cardColor,
+              color: context.cardColor,
               margin: const EdgeInsets.only(bottom: 10),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: ListTile(
                 leading: CircleAvatar(backgroundImage: NetworkImage(p.avatarUrl)),
-                title: Text(p.name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor)),
-                subtitle: Text(p.isReady ? 'Sẵn sàng 🟢' : 'Đang đợi...', style: GoogleFonts.outfit(color: AppTheme.successGreen, fontSize: 12)),
-                trailing: Icon(Icons.check_circle_rounded, color: primaryColor),
+                title: Text(p.name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.textColor)),
+                subtitle: Text(p.isReady ? 'Sẵn sàng 🟢' : 'Đang đợi...', style: GoogleFonts.outfit(color: context.successGreen, fontSize: 12)),
+                trailing: Icon(Icons.check_circle_rounded, color: context.primaryColor),
               ),
             );
           },
@@ -346,7 +400,7 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
             icon: const Icon(Icons.play_arrow_rounded, size: 28),
             label: Text('Bắt Đầu Trận Đấu!', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold)),
             style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
+              backgroundColor: context.primaryColor,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
             onPressed: _startGame,
@@ -356,7 +410,7 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
     );
   }
 
-  Widget _buildPlayingView(Color textColor, Color subTextColor, Color primaryColor, Color cardColor, Color softBg, Color borderColor) {
+  Widget _buildPlayingView() {
     final q = _questions[_currentQuestionIndex];
 
     return Column(
@@ -365,9 +419,9 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: cardColor,
+            color: context.cardColor,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: borderColor),
+            border: Border.all(color: context.borderColor),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -380,8 +434,8 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Bạn', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: textColor)),
-                      Text('+$_myScore điểm', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: primaryColor)),
+                      Text('Bạn', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: context.textColor)),
+                      Text('+$_myScore điểm', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: context.primaryColor)),
                     ],
                   ),
                 ],
@@ -417,7 +471,7 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('Đối thủ', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: textColor)),
+                      Text('Đối thủ', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: context.textColor)),
                       Text('+$_opponentScore điểm', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.purple.shade600)),
                     ],
                   ),
@@ -434,8 +488,8 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Câu hỏi ${_currentQuestionIndex + 1} / ${_questions.length}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: primaryColor)),
-            Text('Tốc độ + Độ chính xác', style: GoogleFonts.outfit(color: subTextColor, fontSize: 12)),
+            Text('Câu hỏi ${_currentQuestionIndex + 1} / ${_questions.length}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.primaryColor)),
+            Text('Tốc độ + Độ chính xác', style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 12)),
           ],
         ),
         const SizedBox(height: 6),
@@ -443,8 +497,8 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
           borderRadius: BorderRadius.circular(6),
           child: LinearProgressIndicator(
             value: (_currentQuestionIndex + 1) / _questions.length,
-            backgroundColor: borderColor,
-            valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+            backgroundColor: context.borderColor,
+            valueColor: AlwaysStoppedAnimation<Color>(context.primaryColor),
             minHeight: 6,
           ),
         ),
@@ -455,21 +509,22 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: cardColor,
+            color: context.cardColor,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: borderColor),
+            border: Border.all(color: context.borderColor),
           ),
           child: Column(
             children: [
               Text(
                 q.word,
-                style: GoogleFonts.outfit(fontSize: 34, fontWeight: FontWeight.bold, color: primaryColor),
+                style: GoogleFonts.outfit(fontSize: 34, fontWeight: FontWeight.bold, color: context.primaryColor),
               ),
               const SizedBox(height: 4),
-              Text(
-                q.phonetic,
-                style: GoogleFonts.outfit(fontSize: 16, color: subTextColor, fontStyle: FontStyle.italic),
-              ),
+              if (q.phonetic.isNotEmpty)
+                Text(
+                  q.phonetic,
+                  style: GoogleFonts.outfit(fontSize: 16, color: context.subTextColor, fontStyle: FontStyle.italic),
+                ),
             ],
           ),
         ),
@@ -485,9 +540,9 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
               final isSelected = _selectedOption == option;
               final isCorrect = option == q.correctAnswer;
 
-              Color bg = cardColor;
-              Color borderC = borderColor;
-              Color textC = textColor;
+              Color bg = context.cardColor;
+              Color borderC = context.borderColor;
+              Color textC = context.textColor;
 
               if (_answered) {
                 if (isCorrect) {
@@ -534,19 +589,19 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
     );
   }
 
-  Widget _buildEndedView(Color textColor, Color subTextColor, Color primaryColor, Color cardColor, Color softBg, Color borderColor) {
+  Widget _buildEndedView() {
     final won = _myScore >= _opponentScore;
 
     return Center(
       child: Container(
         padding: const EdgeInsets.all(28),
         decoration: BoxDecoration(
-          color: cardColor,
+          color: context.cardColor,
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: borderColor, width: 1.5),
+          border: Border.all(color: context.borderColor, width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: AppTheme.isDark(context) ? 0.25 : 0.05),
+              color: Colors.black.withValues(alpha: context.isDark ? 0.25 : 0.05),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -560,7 +615,7 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
               style: GoogleFonts.outfit(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
-                color: won ? Colors.amber.shade600 : primaryColor,
+                color: won ? Colors.amber.shade600 : context.primaryColor,
               ),
             ),
             const SizedBox(height: 16),
@@ -569,7 +624,7 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: softBg,
+                color: context.softBgColor,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
@@ -579,16 +634,16 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
                     children: [
                       CircleAvatar(radius: 24, backgroundImage: NetworkImage(_players[0].avatarUrl)),
                       const SizedBox(height: 6),
-                      Text('Bạn', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: textColor)),
-                      Text('$_myScore điểm', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16, color: primaryColor)),
+                      Text('Bạn', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: context.textColor)),
+                      Text('$_myScore điểm', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16, color: context.primaryColor)),
                     ],
                   ),
-                  Text('VS', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 18, color: subTextColor)),
+                  Text('VS', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 18, color: context.subTextColor)),
                   Column(
                     children: [
                       CircleAvatar(radius: 24, backgroundImage: NetworkImage(_players[1].avatarUrl)),
                       const SizedBox(height: 6),
-                      Text('Đối thủ', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: textColor)),
+                      Text('Đối thủ', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: context.textColor)),
                       Text('$_opponentScore điểm', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.purple.shade600)),
                     ],
                   ),
@@ -601,7 +656,7 @@ class _WordBattleScreenState extends State<WordBattleScreen> {
               icon: const Icon(Icons.replay_rounded),
               label: const Text('Đấu Trận Khác'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
+                backgroundColor: context.primaryColor,
                 padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
               ),
               onPressed: () {

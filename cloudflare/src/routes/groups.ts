@@ -24,14 +24,14 @@ export interface GroupItem {
  */
 groupRoutes.post('/', async (c) => {
   try {
+    const { uid } = c.get('auth'); // Always use JWT uid, never trust body.createdByUid
     const body = await c.req.json<{
       name: string;
       description?: string;
-      createdByUid: string;
     }>();
 
-    if (!body.name || !body.createdByUid) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing name or createdByUid' }, 400);
+    if (!body.name) {
+      return c.json<ApiResponse>({ success: false, error: 'Missing name' }, 400);
     }
 
     const db = c.env.DB;
@@ -43,7 +43,7 @@ groupRoutes.post('/', async (c) => {
         `INSERT INTO groups (id, name, description, created_by_uid, invite_code, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
       )
-      .bind(groupId, body.name, body.description || '', body.createdByUid, inviteCode)
+      .bind(groupId, body.name, body.description || '', uid, inviteCode)
       .run();
 
     // Add owner as first member
@@ -52,7 +52,7 @@ groupRoutes.post('/', async (c) => {
         `INSERT INTO group_members (group_id, uid, role, joined_at)
          VALUES (?, ?, 'owner', datetime('now'))`
       )
-      .bind(groupId, body.createdByUid)
+      .bind(groupId, uid)
       .run();
 
     return c.json<ApiResponse<{ id: string; inviteCode: string }>>({
@@ -70,10 +70,11 @@ groupRoutes.post('/', async (c) => {
  */
 groupRoutes.post('/join', async (c) => {
   try {
-    const body = await c.req.json<{ inviteCode: string; uid: string }>();
+    const { uid } = c.get('auth'); // Always use JWT uid, never trust body.uid
+    const body = await c.req.json<{ inviteCode: string }>();
 
-    if (!body.inviteCode || !body.uid) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing inviteCode or uid' }, 400);
+    if (!body.inviteCode) {
+      return c.json<ApiResponse>({ success: false, error: 'Missing inviteCode' }, 400);
     }
 
     const db = c.env.DB;
@@ -89,7 +90,7 @@ groupRoutes.post('/join', async (c) => {
          VALUES (?, ?, 'member', datetime('now'))
          ON CONFLICT(group_id, uid) DO NOTHING`
       )
-      .bind(group.id, body.uid)
+      .bind(group.id, uid)
       .run();
 
     return c.json<ApiResponse<{ group: GroupItem }>>({
@@ -107,8 +108,7 @@ groupRoutes.post('/join', async (c) => {
  */
 groupRoutes.get('/my-groups', async (c) => {
   try {
-    const uid = c.req.query('uid');
-    if (!uid) return c.json<ApiResponse>({ success: false, error: 'Missing uid parameter' }, 400);
+    const { uid } = c.get('auth'); // Always use JWT uid, never trust query param
 
     const db = c.env.DB;
     const res = await db
@@ -146,9 +146,19 @@ function getStartOfWeekISO(): string {
  */
 groupRoutes.get('/:groupId/leaderboard', async (c) => {
   try {
+    const { uid } = c.get('auth');
     const groupId = c.req.param('groupId');
     const period = c.req.query('period') || 'all';
     const db = c.env.DB;
+
+    // Membership check — prevent leaking private group data to outsiders
+    const isMember = await db
+      .prepare('SELECT 1 FROM group_members WHERE group_id = ? AND uid = ?')
+      .bind(groupId, uid)
+      .first();
+    if (!isMember) {
+      return c.json<ApiResponse>({ success: false, error: 'Bạn không phải thành viên của nhóm này' }, 403);
+    }
 
     if (period === 'weekly') {
       const startOfWeek = getStartOfWeekISO();

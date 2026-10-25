@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/theme/app_theme.dart';
+import 'package:lexiflow/core/theme/app_theme.dart';
+import 'package:lexiflow/core/theme/theme_extension.dart';
 import '../../core/utils/page_transitions.dart';
 import 'word_battle_screen.dart';
 
@@ -115,7 +116,7 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
       SnackBar(
         content: Text('Đã sao chép Mã ID công khai: $_selfUserCode'),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: AppTheme.successGreen,
+        backgroundColor: context.successGreen,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
@@ -124,15 +125,11 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
   void _showUserProfileDialog(FriendUser user) {
     final bool isFriend = user.relationshipStatus == 'accepted';
     final bool canView = user.isPublicProfile == 1 || isFriend;
-    final cardColor = AppTheme.cardColor(context);
-    final textColor = AppTheme.textColor(context);
-    final subTextColor = AppTheme.subTextColor(context);
-    final primaryColor = AppTheme.primaryColor(context);
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: cardColor,
+        backgroundColor: context.cardColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         contentPadding: const EdgeInsets.all(24),
         content: Column(
@@ -145,18 +142,18 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
             const SizedBox(height: 12),
             Text(
               user.displayName,
-              style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
+              style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: context.textColor),
             ),
             const SizedBox(height: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
               decoration: BoxDecoration(
-                color: primaryColor.withValues(alpha: 0.12),
+                color: context.primaryColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 '${user.userCode} · Lv.${user.level}',
-                style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: primaryColor),
+                style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: context.primaryColor),
               ),
             ),
             const SizedBox(height: 16),
@@ -164,7 +161,7 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppTheme.softBgColor(context),
+                  color: context.softBgColor,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
@@ -173,12 +170,12 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
                     const SizedBox(height: 6),
                     Text(
                       'Hồ sơ riêng tư',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor),
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.textColor),
                     ),
                     Text(
                       'Người dùng này thiết lập chỉ bạn bè mới xem được thông tin tiến trình.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(fontSize: 12, color: subTextColor),
+                      style: GoogleFonts.outfit(fontSize: 12, color: context.subTextColor),
                     ),
                   ],
                 ),
@@ -192,15 +189,15 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
                       Column(
                         children: [
                           const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent),
-                          Text('${user.streakDays} Ngày', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor)),
-                          Text('Streak', style: GoogleFonts.outfit(fontSize: 11, color: subTextColor)),
+                          Text('${user.streakDays} Ngày', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.textColor)),
+                          Text('Streak', style: GoogleFonts.outfit(fontSize: 11, color: context.subTextColor)),
                         ],
                       ),
                       Column(
                         children: [
-                          Icon(Icons.stars_rounded, color: primaryColor),
-                          Text('+${user.xp} XP', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: primaryColor)),
-                          Text('Kinh nghiệm', style: GoogleFonts.outfit(fontSize: 11, color: subTextColor)),
+                          Icon(Icons.stars_rounded, color: context.primaryColor),
+                          Text('+${user.xp} XP', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.primaryColor)),
+                          Text('Kinh nghiệm', style: GoogleFonts.outfit(fontSize: 11, color: context.subTextColor)),
                         ],
                       ),
                     ],
@@ -237,23 +234,19 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
-    final textColor = AppTheme.textColor(context);
-    final subTextColor = AppTheme.subTextColor(context);
-    final primaryColor = AppTheme.primaryColor(context);
-    final cardColor = AppTheme.cardColor(context);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'Bạn Bè & Kết Nối',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.textColor),
         ),
         bottom: TabBar(
           controller: _tabController,
-          labelColor: primaryColor,
-          unselectedLabelColor: subTextColor,
-          indicatorColor: primaryColor,
+          labelColor: context.primaryColor,
+          unselectedLabelColor: context.subTextColor,
+          indicatorColor: context.primaryColor,
           labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold),
           tabs: [
             Tab(text: 'Bạn bè (${_friends.length})'),
@@ -269,9 +262,9 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
             decoration: BoxDecoration(
-              color: cardColor,
+              color: context.cardColor,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
+              border: Border.all(color: context.primaryColor.withValues(alpha: 0.2)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -279,8 +272,8 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Mã ID công khai của bạn', style: GoogleFonts.outfit(fontSize: 11, color: subTextColor)),
-                    Text(_selfUserCode, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: primaryColor)),
+                    Text('Mã ID công khai của bạn', style: GoogleFonts.outfit(fontSize: 11, color: context.subTextColor)),
+                    Text(_selfUserCode, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: context.primaryColor)),
                   ],
                 ),
                 OutlinedButton.icon(
@@ -302,14 +295,14 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
               children: [
                 // TAB 1: FRIENDS LIST
                 _friends.isEmpty
-                    ? Center(child: Text('Chưa có bạn bè nào', style: GoogleFonts.outfit(color: subTextColor)))
+                    ? Center(child: Text('Chưa có bạn bè nào', style: GoogleFonts.outfit(color: context.subTextColor)))
                     : ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         itemCount: _friends.length,
                         itemBuilder: (context, index) {
                           final f = _friends[index];
                           return Card(
-                            color: cardColor,
+                            color: context.cardColor,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             margin: const EdgeInsets.only(bottom: 10),
                             child: ListTile(
@@ -323,16 +316,16 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
                                       width: 11,
                                       height: 11,
                                       decoration: BoxDecoration(
-                                        color: AppTheme.successGreen,
+                                        color: context.successGreen,
                                         shape: BoxShape.circle,
-                                        border: Border.all(color: cardColor, width: 2),
+                                        border: Border.all(color: context.cardColor, width: 2),
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
-                              title: Text(f.displayName, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor)),
-                              subtitle: Text('${f.userCode} · 🔥 ${f.streakDays}d streak · 🟢 Online', style: GoogleFonts.outfit(color: subTextColor, fontSize: 12)),
+                              title: Text(f.displayName, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.textColor)),
+                              subtitle: Text('${f.userCode} · 🔥 ${f.streakDays}d streak · 🟢 Online', style: GoogleFonts.outfit(color: context.subTextColor, fontSize: 12)),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -347,7 +340,7 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
                                     },
                                   ),
                                   IconButton(
-                                    icon: Icon(Icons.visibility_outlined, color: primaryColor),
+                                    icon: Icon(Icons.visibility_outlined, color: context.primaryColor),
                                     onPressed: () => _showUserProfileDialog(f),
                                   ),
                                 ],
@@ -359,25 +352,25 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
 
                 // TAB 2: PENDING REQUESTS
                 _pendingRequests.isEmpty
-                    ? Center(child: Text('Không có lời mời nào đang chờ', style: GoogleFonts.outfit(color: subTextColor)))
+                    ? Center(child: Text('Không có lời mời nào đang chờ', style: GoogleFonts.outfit(color: context.subTextColor)))
                     : ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         itemCount: _pendingRequests.length,
                         itemBuilder: (context, index) {
                           final req = _pendingRequests[index];
                           return Card(
-                            color: cardColor,
+                            color: context.cardColor,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             margin: const EdgeInsets.only(bottom: 10),
                             child: ListTile(
                               leading: CircleAvatar(backgroundImage: NetworkImage(req.avatarUrl)),
-                              title: Text(req.displayName, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor)),
-                              subtitle: Text(req.userCode, style: GoogleFonts.outfit(color: primaryColor, fontSize: 12, fontWeight: FontWeight.bold)),
+                              title: Text(req.displayName, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.textColor)),
+                              subtitle: Text(req.userCode, style: GoogleFonts.outfit(color: context.primaryColor, fontSize: 12, fontWeight: FontWeight.bold)),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   IconButton(
-                                    icon: const Icon(Icons.check_circle_rounded, color: AppTheme.successGreen),
+                                    icon: Icon(Icons.check_circle_rounded, color: context.successGreen),
                                     onPressed: () {
                                       setState(() {
                                         _pendingRequests.removeAt(index);
@@ -389,7 +382,7 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
                                     },
                                   ),
                                   IconButton(
-                                    icon: const Icon(Icons.cancel_rounded, color: AppTheme.errorRed),
+                                    icon: Icon(Icons.cancel_rounded, color: context.errorRed),
                                     onPressed: () {
                                       setState(() {
                                         _pendingRequests.removeAt(index);
@@ -410,7 +403,7 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
                     children: [
                       TextField(
                         controller: _searchController,
-                        style: GoogleFonts.outfit(color: textColor),
+                        style: GoogleFonts.outfit(color: context.textColor),
                         decoration: InputDecoration(
                           hintText: 'Nhập #LEXI-XXXX hoặc tên...',
                           prefixIcon: const Icon(Icons.search_rounded),
@@ -426,12 +419,12 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
                       ),
                       const SizedBox(height: 20),
                       Card(
-                        color: cardColor,
+                        color: context.cardColor,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         child: ListTile(
                           leading: const CircleAvatar(backgroundImage: NetworkImage('https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250')),
-                          title: Text('Nguyễn Thanh Thảo', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: textColor)),
-                          subtitle: Text('#LEXI-4491 · Lv.6', style: GoogleFonts.outfit(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                          title: Text('Nguyễn Thanh Thảo', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.textColor)),
+                          subtitle: Text('#LEXI-4491 · Lv.6', style: GoogleFonts.outfit(color: context.primaryColor, fontWeight: FontWeight.bold, fontSize: 12)),
                           trailing: ElevatedButton.icon(
                             onPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(

@@ -19,21 +19,36 @@ export interface SharedDeckItem {
   created_at: string;
 }
 
+async function fetchSharedDeck(c: any, shareCode: string): Promise<{ deck: SharedDeckItem | null, errorResponse?: any }> {
+  if (!shareCode) {
+    return { deck: null, errorResponse: c.json({ success: false, error: 'Missing shareCode' }, 400) };
+  }
+
+  const db = c.env.DB;
+  const deck = (await db.prepare('SELECT * FROM shared_decks WHERE share_code = ?').bind(shareCode.trim().toUpperCase()).first()) as SharedDeckItem | null;
+
+  if (!deck) {
+    return { deck: null, errorResponse: c.json({ success: false, error: 'Bộ thẻ chia sẻ không tồn tại' }, 404) };
+  }
+
+  return { deck };
+}
+
 /**
  * POST /api/decks/share
  * Share a flashcard deck & generate a share code / link
  */
 deckRoutes.post('/share', async (c) => {
   try {
+    const { uid: ownerUid } = c.get('auth');
     const body = await c.req.json<{
-      ownerUid: string;
       title: string;
       description?: string;
       words: Array<{ word: string; meaning: string; example?: string }>;
     }>();
 
-    if (!body.ownerUid || !body.title || !body.words || body.words.length === 0) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing ownerUid, title or words array' }, 400);
+    if (!body.title || !body.words || body.words.length === 0) {
+      return c.json<ApiResponse>({ success: false, error: 'Missing title or words array' }, 400);
     }
 
     const db = c.env.DB;
@@ -46,7 +61,7 @@ deckRoutes.post('/share', async (c) => {
         `INSERT INTO shared_decks (id, owner_uid, title, description, words_json, share_code, created_at)
          VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
       )
-      .bind(deckId, body.ownerUid, body.title, body.description || '', wordsJson, shareCode)
+      .bind(deckId, ownerUid, body.title, body.description || '', wordsJson, shareCode)
       .run();
 
     return c.json<ApiResponse<{ deckId: string; shareCode: string; shareUrl: string }>>({
@@ -102,32 +117,26 @@ deckRoutes.get('/preview/:shareCode', async (c) => {
  */
 deckRoutes.post('/import', async (c) => {
   try {
-    const body = await c.req.json<{ shareCode: string; targetUid: string }>();
-
-    if (!body.shareCode || !body.targetUid) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing shareCode or targetUid' }, 400);
-    }
+    const { uid: targetUid } = c.get('auth');
+    const body = await c.req.json<{ shareCode: string }>();
+    const { deck, errorResponse } = await fetchSharedDeck(c, body.shareCode);
+    if (errorResponse) return errorResponse;
 
     const db = c.env.DB;
-    const deck = await db.prepare('SELECT * FROM shared_decks WHERE share_code = ?').bind(body.shareCode.trim().toUpperCase()).first<SharedDeckItem>();
+    const words: Array<{ word: string; meaning: string; example?: string }> = JSON.parse(deck!.words_json);
 
-    if (!deck) {
-      return c.json<ApiResponse>({ success: false, error: 'Bộ thẻ chia sẻ không tồn tại' }, 404);
-    }
-
-    const words: Array<{ word: string; meaning: string; example?: string }> = JSON.parse(deck.words_json);
-    let importedCount = 0;
-
-    for (const item of words) {
+    const insertStmts = words.map((item) => {
       const cardId = `fc-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
-      await db
+      return db
         .prepare(
-          `INSERT INTO flashcards (id, uid, word, meaning, example, interval, ease_factor, repetitions, next_review, created_at, updated_at)
+          `INSERT OR IGNORE INTO flashcards (id, uid, word, meaning, example, interval, ease_factor, repetitions, next_review, created_at, updated_at)
            VALUES (?, ?, ?, ?, ?, 0, 2.5, 0, datetime('now'), datetime('now'), datetime('now'))`
         )
-        .bind(cardId, body.targetUid, item.word, item.meaning || '', item.example || '')
-        .run();
-      importedCount++;
+        .bind(cardId, targetUid, item.word, item.meaning || '', item.example || '');
+    });
+
+    if (insertStmts.length > 0) {
+      await db.batch(insertStmts);
     }
 
     // Track user import in user_imported_decks
@@ -139,12 +148,12 @@ deckRoutes.post('/import', async (c) => {
            imported_count = excluded.imported_count,
            last_synced_at = datetime('now')`
       )
-      .bind(body.targetUid, deck.share_code, words.length)
+      .bind(targetUid, deck!.share_code, words.length)
       .run();
 
     return c.json<ApiResponse<{ importedCount: number; title: string }>>({
       success: true,
-      data: { importedCount, title: deck.title }
+      data: { importedCount: words.length, title: deck!.title }
     });
   } catch (err) {
     return c.json<ApiResponse>({ success: false, error: (err as Error).message }, 500);
@@ -157,11 +166,11 @@ deckRoutes.post('/import', async (c) => {
  */
 deckRoutes.get('/check-updates', async (c) => {
   try {
+    const { uid: targetUid } = c.get('auth');
     const shareCode = c.req.query('shareCode')?.trim().toUpperCase();
-    const targetUid = c.req.query('targetUid');
 
-    if (!shareCode || !targetUid) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing shareCode or targetUid' }, 400);
+    if (!shareCode) {
+      return c.json<ApiResponse>({ success: false, error: 'Missing shareCode' }, 400);
     }
 
     const db = c.env.DB;
@@ -201,41 +210,34 @@ deckRoutes.get('/check-updates', async (c) => {
  */
 deckRoutes.post('/sync-new-words', async (c) => {
   try {
-    const body = await c.req.json<{ shareCode: string; targetUid: string }>();
-    if (!body.shareCode || !body.targetUid) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing shareCode or targetUid' }, 400);
-    }
+    const { uid: targetUid } = c.get('auth');
+    const body = await c.req.json<{ shareCode: string }>();
+    const { deck, errorResponse } = await fetchSharedDeck(c, body.shareCode);
+    if (errorResponse) return errorResponse;
 
     const db = c.env.DB;
-    const deck = await db.prepare('SELECT * FROM shared_decks WHERE share_code = ?').bind(body.shareCode.trim().toUpperCase()).first<SharedDeckItem>();
-
-    if (!deck) {
-      return c.json<ApiResponse>({ success: false, error: 'Shared deck not found' }, 404);
-    }
-
-    const words: Array<{ word: string; meaning: string; example?: string }> = JSON.parse(deck.words_json);
+    const words: Array<{ word: string; meaning: string; example?: string }> = JSON.parse(deck!.words_json);
 
     // Get user's existing cards
     const userCards = await db
       .prepare('SELECT word FROM flashcards WHERE uid = ?')
-      .bind(body.targetUid)
+      .bind(targetUid)
       .all<{ word: string }>();
 
-    const existingSet = new Set((userCards.results || []).map((c) => c.word.toLowerCase()));
-    let newlyAddedCount = 0;
+    const existingSet = new Set((userCards.results || []).map((row) => row.word.toLowerCase()));
+    const newWords = words.filter((w) => !existingSet.has(w.word.toLowerCase()));
 
-    for (const item of words) {
-      if (!existingSet.has(item.word.toLowerCase())) {
+    if (newWords.length > 0) {
+      const insertStmts = newWords.map((item) => {
         const cardId = `fc-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
-        await db
+        return db
           .prepare(
-            `INSERT INTO flashcards (id, uid, word, meaning, example, interval, ease_factor, repetitions, next_review, created_at, updated_at)
+            `INSERT OR IGNORE INTO flashcards (id, uid, word, meaning, example, interval, ease_factor, repetitions, next_review, created_at, updated_at)
              VALUES (?, ?, ?, ?, ?, 0, 2.5, 0, datetime('now'), datetime('now'), datetime('now'))`
           )
-          .bind(cardId, body.targetUid, item.word, item.meaning || '', item.example || '')
-          .run();
-        newlyAddedCount++;
-      }
+          .bind(cardId, targetUid, item.word, item.meaning || '', item.example || '');
+      });
+      await db.batch(insertStmts);
     }
 
     // Update tracking
@@ -247,12 +249,12 @@ deckRoutes.post('/sync-new-words', async (c) => {
            imported_count = excluded.imported_count,
            last_synced_at = datetime('now')`
       )
-      .bind(body.targetUid, deck.share_code, words.length)
+      .bind(targetUid, deck!.share_code, words.length)
       .run();
 
     return c.json<ApiResponse<{ newlyAddedCount: number; title: string }>>({
       success: true,
-      data: { newlyAddedCount, title: deck.title }
+      data: { newlyAddedCount: newWords.length, title: deck!.title }
     });
   } catch (err) {
     return c.json<ApiResponse>({ success: false, error: (err as Error).message }, 500);
@@ -267,10 +269,7 @@ deckRoutes.post('/sync-new-words', async (c) => {
 deckRoutes.get('/summary', async (c) => {
   const startTime = Date.now();
   try {
-    const uid = c.req.query('uid') || (c.get('auth' as any) ? (c.get('auth' as any) as any).uid : null);
-    if (!uid) {
-      return c.json<ApiResponse>({ success: false, error: 'Missing uid' }, 400);
-    }
+    const { uid } = c.get('auth');
 
     const db = c.env.DB;
 

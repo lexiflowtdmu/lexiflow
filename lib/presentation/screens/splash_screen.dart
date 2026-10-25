@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/theme/app_theme.dart';
+import 'package:lexiflow/core/theme/theme_extension.dart';
 import '../bloc/auth_bloc.dart';
 import 'auth_screen.dart';
 import 'dashboard_screen.dart';
@@ -82,11 +82,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = AppTheme.primaryColor(context);
-    final cardColor = AppTheme.cardColor(context);
-    final textColor = AppTheme.textColor(context);
-    final subTextColor = AppTheme.subTextColor(context);
-    final borderColor = AppTheme.borderColor(context);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -103,12 +98,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   height: 120,
                   width: 120,
                   decoration: BoxDecoration(
-                    color: cardColor,
+                    color: context.cardColor,
                     borderRadius: BorderRadius.circular(32),
-                    border: Border.all(color: borderColor, width: 1.5),
+                    border: Border.all(color: context.borderColor, width: 1.5),
                     boxShadow: [
                       BoxShadow(
-                        color: primaryColor.withValues(alpha: 0.25),
+                        color: context.primaryColor.withValues(alpha: 0.25),
                         blurRadius: 36,
                         spreadRadius: 4,
                         offset: const Offset(0, 12),
@@ -119,7 +114,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     child: Icon(
                       Icons.menu_book_rounded,
                       size: 64,
-                      color: primaryColor,
+                      color: context.primaryColor,
                     ),
                   ),
                 ),
@@ -139,7 +134,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       style: GoogleFonts.outfit(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
-                        color: textColor,
+                        color: context.textColor,
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -148,7 +143,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       'Dòng chảy từ vựng & Ghi nhớ dài lâu',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 14,
-                        color: subTextColor,
+                        color: context.subTextColor,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
