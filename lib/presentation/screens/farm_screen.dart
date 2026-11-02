@@ -18,6 +18,21 @@ const Map<String, String> _cropNameVi = {
   'blueberry': 'Việt Quất',
 };
 
+const _wood = Color(0xFFA85C1C);
+const _woodDark = Color(0xFF7C3F12);
+const _parchment = Color(0xFFFFF4D9);
+const _ink = Color(0xFF3B2410);
+
+const _sheetDecoration = BoxDecoration(
+  color: _parchment,
+  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+  border: Border(
+    top: BorderSide(color: _wood, width: 4),
+    left: BorderSide(color: _wood, width: 4),
+    right: BorderSide(color: _wood, width: 4),
+  ),
+);
+
 // ── FarmScreen Entry Point ────────────────────────────────────
 class FarmScreen extends StatelessWidget {
   const FarmScreen({super.key});
@@ -131,7 +146,7 @@ class _SkyFarmViewState extends State<_SkyFarmView>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: Row(
           children: [
-            const Text('💧', style: TextStyle(fontSize: 24)),
+            const FarmImage('drop', width: 26, height: 26),
             const SizedBox(width: 8),
             Text(
               'Tưới Nước Từ Vựng',
@@ -172,7 +187,7 @@ class _SkyFarmViewState extends State<_SkyFarmView>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '💡 Mẹo nhà nông LexiFlow:',
+                    'Mẹo nhà nông LexiFlow:',
                     style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF15803D)),
                   ),
                   const SizedBox(height: 4),
@@ -229,8 +244,7 @@ class _SkyFarmViewState extends State<_SkyFarmView>
               SnackBar(
                 content: Row(
                   children: [
-                    const Text('✨ ', style: TextStyle(fontSize: 16)),
-                    Text(state.message, style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+                                        Text(state.message, style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
                   ],
                 ),
                 backgroundColor: const Color(0xFF2E7D32),
@@ -316,8 +330,9 @@ class _SkyFarmViewState extends State<_SkyFarmView>
 
               // 2. DÂY LEO ĐẬU THẦN (Jack's Beanstalk) BÊN TRÁI
               Positioned.fill(
-                child: CustomPaint(
-                  painter: _BeanstalkPainter(),
+                child: const Align(
+                  alignment: Alignment.centerLeft,
+                  child: FarmImage('beanstalk', width: 52, height: double.infinity, fit: BoxFit.fill),
                 ),
               ),
 
@@ -332,8 +347,11 @@ class _SkyFarmViewState extends State<_SkyFarmView>
                       Padding(
                         padding: const EdgeInsets.fromLTRB(44, 0, 12, 12),
                         child: Material(
-                          color: const Color(0xD90C2D48),
-                          borderRadius: BorderRadius.circular(16),
+                          color: _parchment,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: const BorderSide(color: _woodDark, width: 2),
+                          ),
                           child: InkWell(
                             borderRadius: BorderRadius.circular(16),
                             onTap: hintAction,
@@ -344,7 +362,7 @@ class _SkyFarmViewState extends State<_SkyFarmView>
                                 child: Text(
                                   hintAction == null ? hintText : '$hintText →',
                                   style: GoogleFonts.plusJakartaSans(
-                                    color: Colors.white,
+                                    color: _ink,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -355,12 +373,14 @@ class _SkyFarmViewState extends State<_SkyFarmView>
                         ),
                       ),
 
-                      // TẦNG MÂY 2 (Thượng Tầng - Ốc Sên Tím)
+                      const Center(child: FarmImage('island-home', width: 210)),
+                      const SizedBox(height: 6),
+
+                      // TẦNG MÂY 2 (Thượng Tầng)
                       _CloudFloorSection(
                         floorNumber: 2,
                         floorTitle: 'TẦNG THẦN THOẠI',
-                        machineEmoji: '🐌',
-                        machineColor: const Color(0xFFC026D3),
+                        pet: 'pet-corgi',
                         plots: floor2Plots,
                         catalog: loaded.cropCatalog,
                         animCtrl: _animCtrl,
@@ -377,14 +397,13 @@ class _SkyFarmViewState extends State<_SkyFarmView>
                         },
                       ),
 
-                      const SizedBox(height: 36),
+                      const SizedBox(height: 10),
 
-                      // TẦNG MÂY 1 (Hạ Tầng - Bọ Cánh Cam)
+                      // TẦNG MÂY 1 (Hạ Tầng)
                       _CloudFloorSection(
                         floorNumber: 1,
                         floorTitle: 'TẦNG BỒNG BỀNH',
-                        machineEmoji: '🐞',
-                        machineColor: const Color(0xFFEA580C),
+                        pet: 'pet-cat',
                         plots: floor1Plots,
                         catalog: loaded.cropCatalog,
                         animCtrl: _animCtrl,
@@ -424,7 +443,7 @@ class _SkyFarmViewState extends State<_SkyFarmView>
                 child: Column(
                   children: [
                     _SideCircleButton(
-                      icon: Icons.receipt_long_rounded,
+                      asset: 'icon-orders',
                       color: const Color(0xFF10B981),
                       badgeText: () {
                         final count = loaded!.orders
@@ -436,7 +455,7 @@ class _SkyFarmViewState extends State<_SkyFarmView>
                     ),
                     const SizedBox(height: 10),
                     _SideCircleButton(
-                      icon: Icons.backpack_rounded,
+                      asset: 'icon-inventory',
                       color: const Color(0xFF0284C7),
                       onTap: () => _showInventoryModal(context, loaded!.inventory),
                     ),
@@ -457,8 +476,7 @@ class _SkyFarmViewState extends State<_SkyFarmView>
 class _CloudFloorSection extends StatelessWidget {
   final int floorNumber;
   final String floorTitle;
-  final String machineEmoji;
-  final Color machineColor;
+  final String pet;
   final List<FarmPlot?> plots;
   final Map<String, dynamic> catalog;
   final AnimationController animCtrl;
@@ -467,8 +485,7 @@ class _CloudFloorSection extends StatelessWidget {
   const _CloudFloorSection({
     required this.floorNumber,
     required this.floorTitle,
-    required this.machineEmoji,
-    required this.machineColor,
+    required this.pet,
     required this.plots,
     required this.catalog,
     required this.animCtrl,
@@ -477,112 +494,75 @@ class _CloudFloorSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 240,
-      margin: const EdgeInsets.symmetric(horizontal: 10),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // 1. NỀN TẦNG MÂY TRẮNG 3D (Cloud platform base)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 45,
-            height: 75,
-            child: CustomPaint(
-              painter: _CloudPlatformPainter(),
-            ),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 560),
+        child: Padding(
+          padding: const EdgeInsets.only(left: 34, right: 4),
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.topCenter,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 34),
+                child: AspectRatio(
+                  aspectRatio: 1.55,
+                  child: LayoutBuilder(
+                    builder: (context, box) {
+                      // Pots shrink with the cloud so four of them always fit on a small phone.
+                      final scale = (box.maxWidth / 340).clamp(0.72, 1.3);
+                      return Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          const Positioned.fill(child: FarmImage('cloud-fence', fit: BoxFit.fill)),
+                          Positioned(
+                            left: box.maxWidth * 0.03,
+                            right: box.maxWidth * 0.14,
+                            bottom: box.maxHeight * 0.1,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: List.generate(4, (i) {
+                                final plot = plots[i];
+                                final slotIdx = (floorNumber == 2) ? (4 + i) : i;
+                                return _SkyPotWidget(
+                                  plot: plot,
+                                  slotIndex: slotIdx,
+                                  animCtrl: animCtrl,
+                                  scale: scale,
+                                  onTap: () => onPotTap(plot, slotIdx),
+                                );
+                              }),
+                            ),
+                          ),
+                          Positioned(
+                            right: 0,
+                            bottom: box.maxHeight * 0.06,
+                            child: FarmImage(pet, width: box.maxWidth * 0.15),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(
+                  color: _wood,
+                  borderRadius: BorderRadius.circular(9),
+                  border: const Border(bottom: BorderSide(color: _woodDark, width: 3)),
+                ),
+                child: Text(
+                  floorTitle,
+                  style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w800, color: const Color(0xFFFFF8E7)),
+                ),
+              ),
+            ],
           ),
-
-          // 2. NHÃN TẦNG MÂY KÈM ỐC SÊN / BỌ CAM (trang trí)
-          Positioned(
-            left: 34,
-            top: 12,
-            child: _MachinePetWidget(
-              emoji: machineEmoji,
-              color: machineColor,
-              floorNumber: floorNumber,
-              title: floorTitle,
-            ),
-          ),
-
-          // 3. HÀNG 4 CHẬU CÂY TRÊN TẦNG MÂY
-          Positioned(
-            left: 34,
-            right: 6,
-            bottom: 48,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: List.generate(4, (i) {
-                final plot = plots[i];
-                final slotIdx = (floorNumber == 2) ? (4 + i) : i;
-
-                // Các loại chậu ngọc thần kỳ luân phiên
-                final potTheme = _getPotTheme(slotIdx);
-
-                return _SkyPotWidget(
-                  plot: plot,
-                  slotIndex: slotIdx,
-                  potTheme: potTheme,
-                  animCtrl: animCtrl,
-                  onTap: () => onPotTap(plot, slotIdx),
-                );
-              }),
-            ),
-          ),
-
-          // 4. ĐỒ TRANG TRÍ TREO DƯỚI ĐÁY TẦNG MÂY (Chong chóng xoay, Chuông gió)
-          Positioned(
-            left: 40,
-            right: 14,
-            bottom: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _HangingWindmill(animCtrl: animCtrl),
-                _HangingUmbrella(color: const Color(0xFF06B6D4)),
-                _HangingWindmill(animCtrl: animCtrl),
-                _HangingUmbrella(color: const Color(0xFF10B981)),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
-  }
-
-  _PotThemeData _getPotTheme(int slotIndex) {
-    switch (slotIndex % 4) {
-      case 0:
-        return const _PotThemeData(
-          topColor: Color(0xFF67E8F9),
-          bottomColor: Color(0xFF0E7490),
-          borderColor: Colors.white,
-          name: 'Chậu Rồng Biển',
-        );
-      case 1:
-        return const _PotThemeData(
-          topColor: Color(0xFFFDBA74),
-          bottomColor: Color(0xFFC2410C),
-          borderColor: Color(0xFFFEF08A),
-          name: 'Chậu Phượng Hoàng',
-        );
-      case 2:
-        return const _PotThemeData(
-          topColor: Color(0xFF86EFAC),
-          bottomColor: Color(0xFF15803D),
-          borderColor: Colors.white,
-          name: 'Chậu Ngọc Bích',
-        );
-      default:
-        return const _PotThemeData(
-          topColor: Color(0xFFD97706),
-          bottomColor: Color(0xFF78350F),
-          borderColor: Color(0xFFFEF3C7),
-          name: 'Chậu Đất Nung Thần Bí',
-        );
-    }
   }
 }
 
@@ -592,15 +572,15 @@ class _CloudFloorSection extends StatelessWidget {
 class _SkyPotWidget extends StatelessWidget {
   final FarmPlot? plot;
   final int slotIndex;
-  final _PotThemeData potTheme;
   final AnimationController animCtrl;
+  final double scale;
   final VoidCallback onTap;
 
   const _SkyPotWidget({
     required this.plot,
     required this.slotIndex,
-    required this.potTheme,
     required this.animCtrl,
+    required this.scale,
     required this.onTap,
   });
 
@@ -611,13 +591,14 @@ class _SkyPotWidget extends StatelessWidget {
     final level = growthLevel(plot?.wordsProgress ?? 0, plot?.wordsNeeded ?? 0, ripe: stage == 2);
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // KHU VỰC CÂY TRỒNG & GIỎ THU HOẠCH
           SizedBox(
-            height: 68,
+            height: 68 * scale,
             child: Stack(
               alignment: Alignment.bottomCenter,
               children: [
@@ -650,7 +631,7 @@ class _SkyPotWidget extends StatelessWidget {
                         child: child,
                       );
                     },
-                    child: CropArt(crop: cropType, level: level, size: 60),
+                    child: CropArt(crop: cropType, level: level, size: 60 * scale),
                   ),
                 ] else ...[
                   // Cây chín sẵn sàng thu hoạch (Stage 2)
@@ -663,7 +644,7 @@ class _SkyPotWidget extends StatelessWidget {
                         child: child,
                       );
                     },
-                    child: CropArt(crop: cropType, level: level, size: 64),
+                    child: CropArt(crop: cropType, level: level, size: 64 * scale),
                   ),
 
                   // Giỏ vàng thu hoạch lắc lư rung rinh trên đầu cây chín
@@ -689,7 +670,7 @@ class _SkyPotWidget extends StatelessWidget {
                             BoxShadow(color: Colors.black26, blurRadius: 4),
                           ],
                         ),
-                        child: const Text('🧺', style: TextStyle(fontSize: 14)),
+                        child: const FarmImage('basket', width: 18, height: 18),
                       ),
                     ),
                   ),
@@ -700,46 +681,8 @@ class _SkyPotWidget extends StatelessWidget {
 
           const SizedBox(height: 2),
 
-          // CHẬU CÂY THẦN TIÊN 3D (Pot container)
-          Container(
-            width: 54,
-            height: 38,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [potTheme.topColor, potTheme.bottomColor],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16),
-                topLeft: Radius.circular(6),
-                topRight: Radius.circular(6),
-              ),
-              border: Border.all(color: potTheme.borderColor, width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Vành miệng chậu
-                Container(
-                  width: 40,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // CHẬU CÂY
+          FarmImage('pot-${slotIndex % 4}', width: 58 * scale, height: 46 * scale),
 
           // Trạng thái bằng chữ, không chỉ dựa vào màu
           if (stage != 0)
@@ -761,107 +704,6 @@ class _SkyPotWidget extends StatelessWidget {
             ),
         ],
       ),
-    );
-  }
-}
-
-class _PotThemeData {
-  final Color topColor;
-  final Color bottomColor;
-  final Color borderColor;
-  final String name;
-
-  const _PotThemeData({
-    required this.topColor,
-    required this.bottomColor,
-    required this.borderColor,
-    required this.name,
-  });
-}
-
-// ============================================================================
-// WIDGET: MÁY ỐC SÊN / BỌ MÁY ĐẦU TẦNG MÂY
-// ============================================================================
-class _MachinePetWidget extends StatelessWidget {
-  final String emoji;
-  final Color color;
-  final int floorNumber;
-  final String title;
-
-  const _MachinePetWidget({
-    required this.emoji,
-    required this.color,
-    required this.floorNumber,
-    required this.title,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(2, 2, 10, 2),
-      decoration: BoxDecoration(
-        color: const Color(0xCC0C2D48),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 26,
-            height: 26,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 1.5),
-            ),
-            child: Text(emoji, style: const TextStyle(fontSize: 13)),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            title,
-            style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ============================================================================
-// WIDGET: ĐỒ TRANG TRÍ TREO (Chong chóng xoay & Ô ngũ sắc)
-// ============================================================================
-class _HangingWindmill extends StatelessWidget {
-  final AnimationController animCtrl;
-  const _HangingWindmill({required this.animCtrl});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(width: 1.5, height: 16, color: Colors.white.withValues(alpha: 0.85)),
-        RotationTransition(
-          turns: animCtrl,
-          child: const Text('🌸', style: TextStyle(fontSize: 18)),
-        ),
-      ],
-    );
-  }
-}
-
-class _HangingUmbrella extends StatelessWidget {
-  final Color color;
-  const _HangingUmbrella({required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(width: 1.5, height: 14, color: Colors.white.withValues(alpha: 0.85)),
-        Text('☂️', style: TextStyle(fontSize: 16, color: color)),
-      ],
     );
   }
 }
@@ -916,9 +758,9 @@ class _GameTopHud extends StatelessWidget {
           // CHỈ SỐ TIỀN TỆ: VÀNG, KIM CƯƠNG, NĂNG LƯỢNG
           Row(
             children: [
-              _HudPill(iconText: '🪙', value: '$coins', color: const Color(0xFFF59E0B)),
+              _HudPill(iconAsset: 'coin', value: '$coins', color: const Color(0xFFF59E0B)),
               const SizedBox(width: 5),
-              _HudPill(iconText: '💧', value: 'còn $dropsNeeded từ', color: const Color(0xFF0EA5E9)),
+              _HudPill(iconAsset: 'drop', value: 'còn $dropsNeeded từ', color: const Color(0xFF0EA5E9)),
             ],
           ),
         ],
@@ -928,29 +770,29 @@ class _GameTopHud extends StatelessWidget {
 }
 
 class _HudPill extends StatelessWidget {
-  final String iconText;
+  final String iconAsset;
   final String value;
   final Color color;
 
-  const _HudPill({required this.iconText, required this.value, required this.color});
+  const _HudPill({required this.iconAsset, required this.value, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.55),
+        color: _parchment,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.85), width: 1.2),
+        border: Border.all(color: _woodDark, width: 2),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(iconText, style: const TextStyle(fontSize: 13)),
+          FarmImage(iconAsset, width: 18, height: 18),
           const SizedBox(width: 3),
           Text(
             value,
-            style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+            style: GoogleFonts.outfit(color: _ink, fontWeight: FontWeight.bold, fontSize: 12),
           ),
         ],
       ),
@@ -962,13 +804,13 @@ class _HudPill extends StatelessWidget {
 // WIDGET: SIDE BUTTON TRÒN MENU GAME
 // ============================================================================
 class _SideCircleButton extends StatelessWidget {
-  final IconData icon;
+  final String asset;
   final Color color;
   final String? badgeText;
   final VoidCallback onTap;
 
   const _SideCircleButton({
-    required this.icon,
+    required this.asset,
     required this.color,
     this.badgeText,
     required this.onTap,
@@ -995,7 +837,7 @@ class _SideCircleButton extends StatelessWidget {
                 BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 3)),
               ],
             ),
-            child: Icon(icon, color: Colors.white, size: 22),
+            child: Padding(padding: const EdgeInsets.all(6), child: FarmImage(asset)),
           ),
           if (badgeText != null)
             Positioned(
@@ -1034,10 +876,7 @@ class _OrdersSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 30),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      decoration: _sheetDecoration,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1055,7 +894,8 @@ class _OrdersSheet extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              const Text('📜 ', style: TextStyle(fontSize: 20)),
+              const FarmImage('icon-orders', width: 26, height: 26),
+              const SizedBox(width: 6),
               Text(
                 'Đơn Hàng Phù Thủy',
                 style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold),
@@ -1073,7 +913,7 @@ class _OrdersSheet extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               child: Center(
                 child: Text(
-                  'Không có đơn hàng nào chờ xử lý 🎉',
+                  'Không có đơn hàng nào chờ xử lý',
                   style: GoogleFonts.outfit(color: Colors.grey.shade600),
                 ),
               ),
@@ -1203,10 +1043,7 @@ class _InventorySheet extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 30),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      decoration: _sheetDecoration,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1221,7 +1058,8 @@ class _InventorySheet extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              const Text('🎒 ', style: TextStyle(fontSize: 20)),
+              const FarmImage('icon-inventory', width: 26, height: 26),
+              const SizedBox(width: 6),
               Text('Kho Nông Sản Của Bạn', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
@@ -1288,10 +1126,7 @@ class _PlantSheet extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 30),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      decoration: _sheetDecoration,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1306,7 +1141,8 @@ class _PlantSheet extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              const Text('🌱 ', style: TextStyle(fontSize: 20)),
+              const FarmImage('crop-herbs-0', width: 26, height: 26),
+              const SizedBox(width: 6),
               Text('Gieo Hạt Vào Chậu', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
@@ -1369,86 +1205,6 @@ class _PlantSheet extends StatelessWidget {
 }
 
 // ============================================================================
-// CUSTOM PAINTER: BỆ TẦNG MÂY BỒNG BỀNH 3D (Cloud Platform Painter)
-// ============================================================================
-class _CloudPlatformPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paintCloud = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-
-    final paintShadow = Paint()
-      ..color = const Color(0xFF7DD3FC).withValues(alpha: 0.4)
-      ..style = PaintingStyle.fill;
-
-    // Bóng mây xanh lam dưới đáy
-    final shadowPath = Path();
-    shadowPath.moveTo(0, size.height * 0.7);
-    shadowPath.quadraticBezierTo(size.width * 0.25, size.height + 12, size.width * 0.5, size.height * 0.75);
-    shadowPath.quadraticBezierTo(size.width * 0.75, size.height + 12, size.width, size.height * 0.7);
-    shadowPath.lineTo(size.width, size.height);
-    shadowPath.lineTo(0, size.height);
-    shadowPath.close();
-    canvas.drawPath(shadowPath, paintShadow);
-
-    // Dải mây bồng bềnh uốn lượn
-    final path = Path();
-    path.moveTo(15, size.height * 0.6);
-    path.quadraticBezierTo(size.width * 0.08, 0, size.width * 0.25, size.height * 0.35);
-    path.quadraticBezierTo(size.width * 0.42, 0, size.width * 0.58, size.height * 0.3);
-    path.quadraticBezierTo(size.width * 0.75, -6, size.width * 0.88, size.height * 0.35);
-    path.quadraticBezierTo(size.width * 0.96, 0, size.width - 10, size.height * 0.6);
-    path.quadraticBezierTo(size.width, size.height * 0.9, size.width - 15, size.height * 0.95);
-    path.lineTo(15, size.height * 0.95);
-    path.close();
-
-    canvas.drawPath(path, paintCloud);
-
-    // Mảng bóng dưới thân mây tạo khối
-    final underside = Path()
-      ..moveTo(15, size.height * 0.95)
-      ..quadraticBezierTo(size.width / 2, size.height * 0.68, size.width - 15, size.height * 0.95)
-      ..close();
-    canvas.drawPath(underside, Paint()..color = const Color(0xFFBAE6FD));
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-// ============================================================================
-// CUSTOM PAINTER: DÂY LEO ĐẬU THẦN (Beanstalk Vine)
-// ============================================================================
-class _BeanstalkPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final vinePaint = Paint()
-      ..color = const Color(0xFF16A34A)
-      ..strokeWidth = 14
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final leafPaint = Paint()
-      ..color = const Color(0xFF22C55E)
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
-    path.moveTo(25, size.height);
-    path.cubicTo(8, size.height * 0.7, 45, size.height * 0.35, 18, 0);
-
-    canvas.drawPath(path, vinePaint);
-
-    // Lá đậu thần mọc ra từ thân dây leo
-    canvas.drawOval(Rect.fromCenter(center: Offset(42, size.height * 0.62), width: 28, height: 16), leafPaint);
-    canvas.drawOval(Rect.fromCenter(center: Offset(12, size.height * 0.32), width: 24, height: 14), leafPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-// ============================================================================
 // ERROR VIEW
 // ============================================================================
 class _ErrorView extends StatelessWidget {
@@ -1461,7 +1217,7 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('😢', style: TextStyle(fontSize: 48)),
+          const FarmImage('pet-cat', width: 96, height: 96),
           const SizedBox(height: 12),
           Text('Không thể tải nông trại trên mây', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 12),

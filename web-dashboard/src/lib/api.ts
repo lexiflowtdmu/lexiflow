@@ -1,6 +1,6 @@
 import { auth } from './firebase';
 
-const BASE_URL = 'https://lexiflow-api.quoctrunghrnk.workers.dev/api/v1';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://lexiflow-api.quoctrunghrnk.workers.dev/api/v1';
 
 async function getToken(): Promise<string | null> {
   const user = auth.currentUser;
