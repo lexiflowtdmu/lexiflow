@@ -136,6 +136,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     if (lower.contains('network-request-failed') || lower.contains('timeout')) {
       return 'Lỗi kết nối mạng. Vui lòng kiểm tra lại Internet và thử lại.';
     }
+    if (lower.contains('popup-blocked')) {
+      return 'Trình duyệt đã chặn cửa sổ đăng nhập Google. Vui lòng cho phép popup và thử lại.';
+    }
+    if (lower.contains('popup-closed-by-user') || lower.contains('cancelled')) {
+      return 'Đăng nhập Google bị hủy. Vui lòng thử lại.';
+    }
+    if (lower.contains('operation-not-allowed')) {
+      return 'Đăng nhập bằng Google chưa được bật. Vui lòng liên hệ quản trị viên.';
+    }
+    if (lower.contains('unauthorized-domain') || lower.contains('auth/unauthorized')) {
+      return 'Domain không được phép. Vui lòng liên hệ quản trị viên.';
+    }
+    if (lower.contains('too-many-requests')) {
+      return 'Quá nhiều yêu cầu. Vui lòng chờ vài phút rồi thử lại.';
+    }
     return 'Đã xảy ra lỗi. Vui lòng thử lại sau.';
   }
 

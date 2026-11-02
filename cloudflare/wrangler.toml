@@ -1,6 +1,7 @@
 name = "lexiflow-api"
 main = "src/index.ts"
 compatibility_date = "2025-07-01"
+account_id = "7340ab97836eb9d1212b7ce4d44772f5"
 
 # D1 Database bindings
 [[d1_databases]]

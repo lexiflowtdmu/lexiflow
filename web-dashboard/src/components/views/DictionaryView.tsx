@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Search, Volume2, Star, Bookmark, ArrowRight, Copy, Sparkles } from 'lucide-react';
-import { recentWords } from '../../data';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Search, Volume2, Star, Bookmark, ArrowRight, Copy, Sparkles, Check, Loader2 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
+import { addHistory, getHistory, saveFlashcard, toggleBookmark, type HistoryItem } from '../../lib/api';
 
 interface DictWord {
   word: string;
@@ -167,8 +167,42 @@ export const DictionaryView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'word' | 'example' | 'idiom'>('all');
   const [bookmarked, setBookmarked] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [savingFlashcard, setSavingFlashcard] = useState(false);
+  const [flashcardSaved, setFlashcardSaved] = useState(false);
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
 
   const currentWord = lookupWordDefinition(searchTerm);
+
+  // Load history on mount
+  useEffect(() => {
+    getHistory().then((r) => setHistoryItems(r.history?.slice(0, 5) || [])).catch(() => {});
+  }, []);
+
+  // Save to history when search changes (debounced)
+  const saveHistory = useCallback((word: string) => {
+    if (word.trim().length < 2) return;
+    addHistory(word.trim().toLowerCase()).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => saveHistory(searchTerm), 800);
+    return () => clearTimeout(t);
+  }, [searchTerm, saveHistory]);
+
+  const handleAddFlashcard = async () => {
+    setSavingFlashcard(true);
+    try {
+      await saveFlashcard(currentWord.word, `${currentWord.tflatDef} | ${currentWord.oxfordDef}`);
+      setFlashcardSaved(true);
+      setTimeout(() => setFlashcardSaved(false), 2000);
+    } catch {}
+    finally { setSavingFlashcard(false); }
+  };
+
+  const handleToggleBookmark = async () => {
+    setBookmarked(!bookmarked);
+    toggleBookmark(currentWord.word, currentWord.tflatDef, currentWord.phonetic).catch(() => {});
+  };
 
   const playAudio = (type: 'UK' | 'US') => {
     if ('speechSynthesis' in window) {
@@ -252,7 +286,7 @@ export const DictionaryView: React.FC = () => {
                     {currentWord.word}
                   </h1>
                   <button
-                    onClick={() => setBookmarked(!bookmarked)}
+                    onClick={handleToggleBookmark}
                     aria-label="Lưu vào danh sách yêu thích"
                     className="p-1.5 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/20 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5]"
                   >
@@ -349,8 +383,9 @@ export const DictionaryView: React.FC = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            <Button variant="primary" size="md" leftIcon={<Bookmark className="w-4 h-4" />}>
-              Thêm vào thẻ ghi nhớ SM-2
+            <Button variant="primary" size="md" onClick={handleAddFlashcard}
+              leftIcon={flashcardSaved ? <Check className="w-4 h-4" /> : savingFlashcard ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bookmark className="w-4 h-4" />}>
+              {flashcardSaved ? 'Đã lưu vào SM-2!' : 'Thêm vào thẻ ghi nhớ SM-2'}
             </Button>
           </Card>
 
@@ -358,15 +393,17 @@ export const DictionaryView: React.FC = () => {
           <Card className="p-5">
             <h3 className="text-[15px] font-bold text-[#0F172A] dark:text-[#F8FAFC] mb-3">Lịch sử tra cứu gần đây</h3>
             <div className="flex flex-col gap-2">
-              {recentWords.map((item) => (
+              {historyItems.length === 0 ? (
+                <p className="text-[13px] text-[#94A3B8] text-center py-3">Chưa có lịch sử tra cứu</p>
+              ) : historyItems.map((item) => (
                 <button
-                  key={item.id}
+                  key={item.word + item.searchedAt}
                   onClick={() => setSearchTerm(item.word)}
                   className="flex items-center justify-between p-2.5 rounded-xl hover:bg-[#F8FAFC] dark:hover:bg-[#1E293B]/60 border border-transparent hover:border-[#E2E8F0] dark:hover:border-[#334155] transition-all text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5]"
                 >
                   <div>
                     <div className="font-extrabold text-[13.5px] text-[#0F172A] dark:text-[#F8FAFC] capitalize group-hover:text-[#4F46E5] dark:group-hover:text-[#818CF8] transition-colors">{item.word}</div>
-                    <div className="text-[11.5px] text-[#64748B] dark:text-[#94A3B8]">{item.meaning}</div>
+                    <div className="text-[11.5px] text-[#64748B] dark:text-[#94A3B8]">{new Date(item.searchedAt).toLocaleDateString('vi-VN')}</div>
                   </div>
                   <ArrowRight className="w-4 h-4 text-[#94A3B8] group-hover:translate-x-1 transition-transform" />
                 </button>

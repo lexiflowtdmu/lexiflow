@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Volume2, Layers, Sparkles, Zap, ShieldCheck, Filter } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Volume2, Layers, Sparkles, Zap, ShieldCheck, Loader2, Filter } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
+import { getDueFlashcards, getFlashcards, reviewFlashcard, waterPlant, type Flashcard as ApiFlashcard } from '../../lib/api';
 
 interface Flashcard {
   id: string;
@@ -16,56 +17,59 @@ interface Flashcard {
   category?: string;
 }
 
-const flashcardsList: Flashcard[] = [
-  {
-    id: 'c1',
-    word: 'innovation',
-    phonetic: '/ˌɪnəˈveɪʃn/',
+function apiToLocal(c: ApiFlashcard): Flashcard {
+  const parts = c.definition?.split(' | ') || [];
+  return {
+    id: c.id,
+    word: c.word,
+    phonetic: c.phonetic || `/${c.word}/`,
     partOfSpeech: 'noun',
-    tflatMeaning: 'sự đổi mới; cải tiến công nghệ',
-    oxfordDef: 'a new idea, method, or device.',
-    example: 'Technological innovation is driving global economic growth.',
-    imageUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800',
-    category: 'Work & Business'
-  },
-  {
-    id: 'c2',
-    word: 'serendipity',
-    phonetic: '/ˌserənˈdɪpəti/',
-    partOfSpeech: 'noun',
-    tflatMeaning: 'sự tình cờ may mắn',
-    oxfordDef: 'the occurrence and development of events by chance in a happy way.',
-    example: 'Her meeting with the investor was pure serendipity.',
-    imageUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=800',
-    category: 'Daily Conversation'
-  },
-  {
-    id: 'c3',
-    word: 'meticulous',
-    phonetic: '/məˈtɪkjələs/',
-    partOfSpeech: 'adjective',
-    tflatMeaning: 'tỉ mỉ, cẩn thận',
-    oxfordDef: 'showing great attention to detail; very careful and precise.',
-    example: 'She was meticulous in preparing her lesson plans and research notes.',
-    imageUrl: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&q=80&w=800',
-    category: 'IELTS Academic'
-  }
-];
+    tflatMeaning: parts[0] || c.definition,
+    oxfordDef: parts[1] || c.definition,
+    example: `Practice using "${c.word}" in a real sentence.`,
+    imageUrl: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&q=80&w=800',
+  };
+}
+
+const QUALITY_MAP: Record<string, number> = {
+  'Lại từ đầu': 0,
+  'Khó': 2,
+  'Bình thường': 3,
+  'Dễ': 5,
+};
 
 export const FlashcardView: React.FC = () => {
   const [studyMode, setStudyMode] = useState<'sm2' | 'custom'>('sm2');
-  const [selectedCategory, setSelectedCategory] = useState<string>('Tất cả');
+  const [selectedCategory, setSelectedCategory] = useState('Tất cả');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
-
   const categories = ['Tất cả', 'Work & Business', 'IELTS Academic', 'Daily Conversation'];
+  const [cards, setCards] = useState<Flashcard[]>([]);
+  const [loadingCards, setLoadingCards] = useState(true);
+  const [sessionDone, setSessionDone] = useState(false);
+  const pendingWaterDrops = useRef(0);
 
-  const filteredList = studyMode === 'custom' && selectedCategory !== 'Tất cả'
-    ? flashcardsList.filter(c => c.category === selectedCategory || selectedCategory === 'Tất cả')
-    : flashcardsList;
+  const loadCards = useCallback(async () => {
+    pendingWaterDrops.current = 0;
+    setLoadingCards(true);
+    setCurrentIndex(0); setIsFlipped(false); setSessionDone(false);
+    try {
+      if (studyMode === 'sm2') {
+        const res = await getDueFlashcards();
+        setCards((res.flashcards || []).map(apiToLocal));
+      } else {
+        const res = await getFlashcards();
+        setCards((res.flashcards || []).map(apiToLocal));
+      }
+    } catch {
+      setCards([]);
+    } finally { setLoadingCards(false); }
+  }, [studyMode]);
 
-  const currentCard = filteredList[currentIndex % filteredList.length] || flashcardsList[0];
-  const progressPercent = Math.round(((currentIndex + 1) / filteredList.length) * 100);
+  useEffect(() => { loadCards(); }, [loadCards]);
+
+  const currentCard = cards[currentIndex];
+  const progressPercent = cards.length ? Math.round(((currentIndex) / cards.length) * 100) : 0;
 
   const playAudio = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -80,16 +84,27 @@ export const FlashcardView: React.FC = () => {
     setIsFlipped((prev) => !prev);
   };
 
-  const handleRating = (_daysText: string) => {
+  const handleRating = (ratingText: string) => {
+    const quality = QUALITY_MAP[ratingText] ?? 3;
+    if (currentCard) {
+      reviewFlashcard({ flashcardId: currentCard.id, quality }).catch(() => {});
+      if (quality > 0) pendingWaterDrops.current += 1;
+    }
     setIsFlipped(false);
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % filteredList.length);
+      const next = currentIndex + 1;
+      if (next >= cards.length) {
+        if (pendingWaterDrops.current > 0) {
+          waterPlant(pendingWaterDrops.current).catch(() => {});
+          pendingWaterDrops.current = 0;
+        }
+        setSessionDone(true);
+      } else {
+        setCurrentIndex(next);
+      }
     }, 250);
   };
 
-  const [lastReviewId, setLastReviewId] = useState<string | null>(null);
-  const [showUndoToast, setShowUndoToast] = useState(false);
-  const [undoTimer, setUndoTimer] = useState<number>(5);
   const [confirmAgainModal, setConfirmAgainModal] = useState(false);
 
   // Keyboard shortcut listener for space (flip) and 1-4 (rating)
@@ -118,14 +133,6 @@ export const FlashcardView: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentIndex, isFlipped, confirmAgainModal]);
-
-  const triggerUndo = () => {
-    setShowUndoToast(false);
-    setLastReviewId(null);
-    setCurrentIndex((prev) => Math.max(0, prev - 1));
-    setIsFlipped(false);
-  };
-
 
   return (
     <div className="max-w-[860px] mx-auto flex flex-col gap-6 select-none font-sans animate-fade-in">
@@ -197,7 +204,7 @@ export const FlashcardView: React.FC = () => {
             </span>
           </div>
           <Badge variant="indigo" size="md">
-            Thẻ {currentIndex + 1} / {filteredList.length}
+            Thẻ {currentIndex + 1} / {cards.length}
           </Badge>
         </div>
         {/* Progress bar */}
@@ -211,6 +218,31 @@ export const FlashcardView: React.FC = () => {
         </div>
       </Card>
 
+      {/* Loading / Empty / Done states */}
+      {loadingCards && (
+        <Card className="p-12 flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 text-[#6366F1] animate-spin" />
+          <p className="text-[#94A3B8] text-sm">Đang tải thẻ ghi nhớ...</p>
+        </Card>
+      )}
+      {!loadingCards && cards.length === 0 && (
+        <Card className="p-12 flex flex-col items-center gap-4">
+          <ShieldCheck className="w-12 h-12 text-emerald-400" />
+          <h3 className="text-lg font-bold text-[#F8FAFC]">Hoàn thành tất cả thẻ hôm nay!</h3>
+          <p className="text-[#94A3B8] text-sm text-center">Không có thẻ nào đến hạn ôn tập. Hãy quay lại vào ngày mai.</p>
+          <Button variant="primary" size="md" onClick={loadCards}>Kiểm tra lại</Button>
+        </Card>
+      )}
+      {!loadingCards && sessionDone && (
+        <Card className="p-12 flex flex-col items-center gap-4">
+          <Sparkles className="w-12 h-12 text-amber-400" />
+          <h3 className="text-lg font-bold text-[#F8FAFC]">Phiên học hoàn thành! 🎉</h3>
+          <p className="text-[#94A3B8] text-sm">Bạn đã ôn tập {cards.length} thẻ.</p>
+          <Button variant="primary" size="md" onClick={loadCards}>Học tiếp</Button>
+        </Card>
+      )}
+      {!loadingCards && !sessionDone && cards.length > 0 && currentCard && (
+      <>
       {/* 3D Flip Card Container */}
       <div className="relative w-full h-[430px] perspective-1000">
         <div
@@ -303,7 +335,7 @@ export const FlashcardView: React.FC = () => {
       {/* Rating Buttons */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <button
-          onClick={() => handleRating('<1 phút')}
+          onClick={() => handleRating('Lại từ đầu')}
           aria-label="Đánh giá Quên (Phím 1)"
           className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100/80 border border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-400 font-bold transition-all shadow-xs active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
         >
@@ -312,7 +344,7 @@ export const FlashcardView: React.FC = () => {
         </button>
 
         <button
-          onClick={() => handleRating('1 ngày')}
+          onClick={() => handleRating('Khó')}
           aria-label="Đánh giá Khó (Phím 2)"
           className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100/80 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-400 font-bold transition-all shadow-xs active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
         >
@@ -321,7 +353,7 @@ export const FlashcardView: React.FC = () => {
         </button>
 
         <button
-          onClick={() => handleRating('3 ngày')}
+          onClick={() => handleRating('Bình thường')}
           aria-label="Đánh giá Tốt (Phím 3)"
           className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100/80 border border-indigo-200 dark:border-indigo-500/30 text-[#4F46E5] dark:text-[#818CF8] font-bold transition-all shadow-xs active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5]"
         >
@@ -330,7 +362,7 @@ export const FlashcardView: React.FC = () => {
         </button>
 
         <button
-          onClick={() => handleRating('6 ngày')}
+          onClick={() => handleRating('Dễ')}
           aria-label="Đánh giá Dễ (Phím 4)"
           className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100/80 border border-emerald-200 dark:border-emerald-500/30 text-[#059669] dark:text-[#34D399] font-bold transition-all shadow-xs active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
         >
@@ -338,6 +370,8 @@ export const FlashcardView: React.FC = () => {
           <span className="text-[11px] font-mono opacity-80">{studyMode === 'sm2' ? '6 ngày' : 'Đã thuộc'}</span>
         </button>
       </div>
+      </>
+      )}
     </div>
   );
 };

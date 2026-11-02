@@ -91,6 +91,8 @@ export const mainNavItems: NavItem[] = [
   { id: 'ocr', label: 'Quét tài liệu', iconName: 'Scan' },
   { id: 'quiz', label: 'Trắc nghiệm', iconName: 'HelpCircle' },
   { id: 'stats', label: 'Thống kê', iconName: 'BarChart2' },
+  { id: 'farm', label: 'Farm', iconName: 'Sprout' },
+  { id: 'wordbattle', label: 'Word Battle', iconName: 'Swords' },
 ];
 
 export const secondaryNavItems: NavItem[] = [

@@ -2,10 +2,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-
 class AuthService {
   final _auth = FirebaseAuth.instance;
-  final GoogleSignIn? _googleSignIn = kIsWeb ? null : GoogleSignIn();
+
+  static const _iosClientId =
+      '1060637668034-pj0jrl8l6kt8616mq88cj8gv08kido09.apps.googleusercontent.com';
+
+  final GoogleSignIn? _googleSignIn = kIsWeb
+      ? null
+      : GoogleSignIn(
+          clientId: defaultTargetPlatform == TargetPlatform.iOS ? _iosClientId : null,
+        );
 
 
 

@@ -14,6 +14,8 @@ import { SearchModal } from './components/SearchModal';
 import { NotificationModal } from './components/NotificationModal';
 import { Toast } from './components/Toast';
 import type { ToastMessage } from './components/Toast';
+import { AuthScreen } from './components/auth/AuthScreen';
+import { useAuth } from './contexts/AuthContext';
 
 // Feature Views
 import { DictionaryView } from './components/views/DictionaryView';
@@ -25,18 +27,50 @@ import { ProfileSettingsView } from './components/views/ProfileSettingsView';
 import { AdminEventsView } from './components/views/AdminEventsView';
 import { FriendsView } from './components/views/FriendsView';
 import { GroupsLeaderboardView } from './components/views/GroupsLeaderboardView';
+import { FarmView } from './components/views/FarmView';
+import { WordBattleView } from './components/views/WordBattleView';
 import { CommunityEventsWidget } from './components/CommunityEventsWidget';
 
 import { mockUser } from './data';
-import { Menu, X, ArrowLeft } from 'lucide-react';
+import { Menu, X, ArrowLeft, BookOpen } from 'lucide-react';
+
+function LoadingScreen() {
+  return (
+    <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#4338CA] to-[#6366F1] flex items-center justify-center animate-pulse">
+          <BookOpen className="w-8 h-8 text-white" />
+        </div>
+        <div className="flex gap-1.5">
+          {[0,1,2].map((i) => (
+            <div key={i} className="w-2 h-2 rounded-full bg-[#6366F1] animate-bounce"
+              style={{ animationDelay: `${i * 0.15}s` }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function App() {
+  const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(true);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  if (loading) return <LoadingScreen />;
+  if (!user) return <AuthScreen />;
+
+  // Build user profile from Firebase user
+  const currentUser = {
+    ...mockUser,
+    name: user.displayName || user.email?.split('@')[0] || 'Người dùng',
+    email: user.email || '',
+    avatar: user.photoURL || mockUser.avatar,
+  };
 
   const addToast = (title: string, message: string) => {
     const id = Date.now().toString();
@@ -75,47 +109,31 @@ export function App() {
       case 'profile':
       case 'settings':
         return <ProfileSettingsView />;
+      case 'farm':
+        return <FarmView onNavigate={setActiveTab} />;
+      case 'wordbattle':
+        return <WordBattleView />;
       case 'home':
       default:
         return (
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-            {/* Center Main Column (XL: 8 cols) */}
+            {/* Center Main Column */}
             <div className="xl:col-span-8 flex flex-col gap-8 min-w-0">
-              {/* Greeting */}
-              <Greeting user={mockUser} />
-
-              {/* Hero Search Banner */}
+              <Greeting user={currentUser} />
               <HeroSearch />
-
-              {/* Community Events & Challenges Banner Widget */}
               <CommunityEventsWidget onSelectEvent={() => setActiveTab('admin-events')} />
-
-              {/* Feature Cards Grid (4 Cards) */}
               <FeatureCards onSelectFeature={(id) => setActiveTab(id)} />
-
-              {/* Bottom Row: Recent Words (Table) + Word of the Day (Card) */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
-                <div className="md:col-span-7 flex flex-col">
-                  <RecentWords />
-                </div>
-                <div className="md:col-span-5 flex flex-col">
-                  <WordOfTheDay />
-                </div>
+                <div className="md:col-span-7 flex flex-col"><RecentWords /></div>
+                <div className="md:col-span-5 flex flex-col"><WordOfTheDay /></div>
               </div>
             </div>
 
-            {/* Right Column: Widgets Stack (XL: 4 cols ~355px) */}
+            {/* Right Column Widgets */}
             <div className="xl:col-span-4 flex flex-col gap-6 w-full">
-              {/* Learning Journey / Profile Card */}
               <LearningJourney />
-
-              {/* Today's Schedule Card */}
               <TodaySchedule />
-
-              {/* Memory Statistics Card */}
               <MemoryStats />
-
-              {/* Recent Activity Feed Card */}
               <RecentActivity />
             </div>
           </div>
@@ -124,23 +142,18 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F7FC] flex flex-col md:flex-row font-sans text-[#1A2340]">
-      {/* Toast Notification Floating System */}
+    <div className="min-h-screen bg-[#0B0F19] flex flex-col md:flex-row text-[#F8FAFC]">
       <Toast toasts={toasts} onClose={removeToast} />
 
-      {/* Global Interactive Search Modal */}
       <SearchModal
         isOpen={searchModalOpen}
         onClose={() => setSearchModalOpen(false)}
         onSelectResult={(tabId, word) => {
           setActiveTab(tabId);
-          if (word) {
-            addToast('Đã mở từ vựng', `Đang xem thông tin chi tiết của từ "${word}"`);
-          }
+          if (word) addToast('Đã mở từ vựng', `Đang xem thông tin chi tiết của từ "${word}"`);
         }}
       />
 
-      {/* Notifications Drawer Modal */}
       <NotificationModal
         isOpen={notificationModalOpen}
         onClose={() => setNotificationModalOpen(false)}
@@ -150,15 +163,13 @@ export function App() {
         }}
       />
 
-      {/* Mobile Drawer Overlay */}
+      {/* Mobile Overlay */}
       {mobileSidebarOpen && (
-        <div
-          onClick={() => setMobileSidebarOpen(false)}
-          className="fixed inset-0 bg-black/40 backdrop-blur-xs z-30 md:hidden animate-fade-in"
-        />
+        <div onClick={() => setMobileSidebarOpen(false)}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 md:hidden animate-fade-in" />
       )}
 
-      {/* Desktop Sidebar (Fixed left ~235px) */}
+      {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 md:relative md:translate-x-0 ${
         mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
@@ -168,47 +179,37 @@ export function App() {
         }} />
       </div>
 
-      {/* Main Container Right of Sidebar */}
+      {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-        {/* Mobile Top Header Toggle Bar */}
-        <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#EEF2FB] border-b border-[#E8ECF5]">
-          <button
-            onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-            className="p-2 rounded-xl bg-white text-[#1F6FEB] shadow-2xs"
-          >
+        {/* Mobile Header */}
+        <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#0F172A] border-b border-[#1E293B]">
+          <button onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+            className="p-2 rounded-xl bg-[#151C2C] text-[#6366F1] border border-[#2D3748]">
             {mobileSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
-          <span className="font-bold text-lg text-[#1A2340]">LexiFlow</span>
-          <img
-            src={mockUser.avatar}
-            alt={mockUser.name}
-            className="w-8 h-8 rounded-full object-cover ring-2 ring-[#1F6FEB]/30"
-          />
+          <span className="font-bold text-lg text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>LexiFlow</span>
+          <img src={currentUser.avatar} alt={currentUser.name}
+            className="w-8 h-8 rounded-full object-cover ring-2 ring-[#6366F1]/40" />
         </div>
 
-        {/* Topbar sticky Header */}
         <Topbar
-          user={mockUser}
+          user={currentUser}
           onOpenSearch={() => setSearchModalOpen(true)}
           onOpenNotifications={() => setNotificationModalOpen(true)}
           hasUnread={hasUnreadNotifications}
           onProfileClick={() => setActiveTab('profile')}
         />
 
-        {/* Sub-view Navigation Back Bar if not on Home */}
         {activeTab !== 'home' && (
-          <div className="px-8 pt-4 pb-0 flex items-center gap-3 animate-fade-in">
-            <button
-              onClick={() => setActiveTab('home')}
-              className="flex items-center gap-2 px-3.5 py-1.5 bg-white hover:bg-[#EEF2FB] border border-[#E8ECF5] rounded-xl text-[13px] font-bold text-[#1F6FEB] transition-colors shadow-2xs"
-            >
+          <div className="px-6 md:px-8 pt-4 pb-0 flex items-center gap-3 animate-fade-in">
+            <button onClick={() => setActiveTab('home')}
+              className="flex items-center gap-2 px-3.5 py-1.5 bg-[#151C2C] hover:bg-[#1E293B] border border-[#2D3748] rounded-xl text-[13px] font-bold text-[#6366F1] transition-colors">
               <ArrowLeft className="w-4 h-4" />
               <span>Quay lại Trang chủ</span>
             </button>
           </div>
         )}
 
-        {/* Workspace Body */}
         <main key={activeTab} className="p-6 md:p-8 flex-1 max-w-[1600px] w-full mx-auto animate-fade-in">
           {renderContent()}
         </main>

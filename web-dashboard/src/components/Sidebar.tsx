@@ -1,19 +1,21 @@
 import React from 'react';
-import { 
-  Home, 
-  BookOpen, 
-  Layers, 
-  Scan, 
-  HelpCircle, 
-  BarChart2, 
-  User, 
+import {
+  Home,
+  BookOpen,
+  Layers,
+  Scan,
+  HelpCircle,
+  BarChart2,
+  User,
   Settings,
   BookMarked,
   Sparkles,
   Flame,
   Calendar,
   Users,
-  Trophy
+  Trophy,
+  Sprout,
+  Swords
 } from 'lucide-react';
 import { mainNavItems, secondaryNavItems } from '../data';
 import { Badge } from './ui/Badge';
@@ -34,7 +36,9 @@ const iconMap: Record<string, React.ReactNode> = {
   Trophy: <Trophy className="w-[18px] h-[18px]" />,
   Calendar: <Calendar className="w-[18px] h-[18px]" />,
   User: <User className="w-[18px] h-[18px]" />,
-  Settings: <Settings className="w-[18px] h-[18px]" />
+  Settings: <Settings className="w-[18px] h-[18px]" />,
+  Sprout: <Sprout className="w-[18px] h-[18px]" />,
+  Swords: <Swords className="w-[18px] h-[18px]" />,
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {

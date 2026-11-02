@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -15,6 +16,7 @@ class NotificationService {
 
   /// Initialize local notifications configuration and timezone mappings.
   Future<void> initialize() async {
+    if (kIsWeb) return;
     tz.initializeTimeZones();
 
     const AndroidInitializationSettings androidSettings =
@@ -43,6 +45,7 @@ class NotificationService {
     int minute = 0,
     bool force = false,
   }) async {
+    if (kIsWeb) return;
     final now = DateTime.now();
     final todayKey = '${now.year}-${now.month}-${now.day}_${hour}_$minute';
 
@@ -85,6 +88,7 @@ class NotificationService {
 
   /// Cancel all scheduled daily notifications.
   Future<void> cancelDailyNotification() async {
+    if (kIsWeb) return;
     await _notificationsPlugin.cancel(id: 0);
     _lastScheduledDateKey = null;
   }

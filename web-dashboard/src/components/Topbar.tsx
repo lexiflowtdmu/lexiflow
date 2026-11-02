@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Search, Bell, Sparkles, Flame } from 'lucide-react';
 import type { UserProfile } from '../data';
 import { Badge } from './ui/Badge';
+import { getStreak } from '../lib/api';
 
 interface TopbarProps {
   user: UserProfile;
@@ -19,6 +20,13 @@ export const Topbar: React.FC<TopbarProps> = ({
   onProfileClick
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [streakDays, setStreakDays] = useState(0);
+
+  useEffect(() => {
+    getStreak()
+      .then((r) => setStreakDays(r.streakDays || 0))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -66,7 +74,7 @@ export const Topbar: React.FC<TopbarProps> = ({
         <div className="hidden sm:flex items-center gap-1.5">
           <Badge variant="amber" pill size="md">
             <Flame className="w-4 h-4 text-amber-500 fill-amber-500 animate-bounce" />
-            <span>12 Ngày liên tục</span>
+            <span>{streakDays} Ngày liên tục</span>
           </Badge>
         </div>
 

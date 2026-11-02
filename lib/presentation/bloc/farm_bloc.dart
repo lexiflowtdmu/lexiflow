@@ -192,8 +192,10 @@ class FarmBloc extends Bloc<FarmEvent, FarmState> {
 
   Future<void> _onHarvest(FarmHarvestPlot event, Emitter<FarmState> emit) async {
     try {
-      await _service.farmHarvest(event.plotId);
-      emit(_parseLoaded(await _service.getFarmState()));
+      final result = await _service.farmHarvest(event.plotId);
+      final loaded = _parseLoaded(await _service.getFarmState());
+      final amount = (result['amount'] as num?)?.toInt() ?? 0;
+      emit(FarmActionSuccess('Thu hoạch +$amount nông sản', loaded));
     } catch (e) {
       emit(FarmError(e.toString()));
     }
@@ -204,7 +206,8 @@ class FarmBloc extends Bloc<FarmEvent, FarmState> {
       final result = await _service.farmFulfillOrder(event.orderId);
       final loaded = _parseLoaded(await _service.getFarmState());
       final earned = (result['coins_earned'] as num?)?.toInt() ?? 0;
-      emit(FarmActionSuccess('+$earned 🪙 Đơn hàng hoàn thành!', loaded));
+      final xp = (result['xp_earned'] as num?)?.toInt() ?? 0;
+      emit(FarmActionSuccess('Giao đơn thành công: +$earned xu, +$xp XP', loaded));
     } catch (e) {
       emit(FarmError(e.toString()));
     }

@@ -1,20 +1,22 @@
-import React, { useState } from 'react';
-import { 
-  Users, 
-  Plus, 
-  Flame, 
-  Sparkles, 
-  Copy, 
-  Check, 
-  Heart, 
-  Zap, 
-  X, 
-  Crown, 
-  UserPlus
+import React, { useState, useEffect } from 'react';
+import {
+  Users,
+  Plus,
+  Flame,
+  Sparkles,
+  Copy,
+  Check,
+  Heart,
+  Zap,
+  X,
+  Crown,
+  UserPlus,
+  Trophy
 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
+import { getAdminLeaderboard, type LeaderboardEntry } from '../../lib/api';
 
 export interface GroupMember {
   uid: string;
@@ -108,6 +110,15 @@ export const GroupsLeaderboardView: React.FC = () => {
   const [groups, setGroups] = useState<GroupData[]>(mockGroups);
   const [selectedGroupId, setSelectedGroupId] = useState<string>('grp-1');
   const [period, setPeriod] = useState<'all' | 'weekly'>('weekly');
+  const [globalLeaderboard, setGlobalLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+
+  useEffect(() => {
+    getAdminLeaderboard()
+      .then((r) => setGlobalLeaderboard(r.leaderboard.slice(0, 10)))
+      .catch(() => {})
+      .finally(() => setLeaderboardLoading(false));
+  }, []);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
 
@@ -424,6 +435,59 @@ export const GroupsLeaderboardView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* GLOBAL LEADERBOARD */}
+      <Card className="p-6">
+        <div className="flex items-center gap-2 mb-5 pb-3 border-b border-[#E2E8F0] dark:border-[#334155]">
+          <Trophy className="w-5 h-5 text-amber-500 fill-amber-500" />
+          <h3 className="font-extrabold text-lg text-[#0F172A] dark:text-[#F8FAFC]">Bảng Xếp Hạng Toàn Cầu LexiFlow</h3>
+          <Badge variant="amber" size="sm" pill>Top 10</Badge>
+        </div>
+        {leaderboardLoading ? (
+          <div className="flex flex-col gap-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-14 rounded-xl bg-[#F1F5F9] dark:bg-[#1E293B] animate-pulse" />
+            ))}
+          </div>
+        ) : globalLeaderboard.length === 0 ? (
+          <div className="text-center py-6 text-[#94A3B8] text-[13px]">Chưa có dữ liệu bảng xếp hạng.</div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {globalLeaderboard.map((entry, i) => (
+              <div
+                key={entry.uid}
+                className={`flex items-center justify-between gap-4 p-3.5 rounded-2xl border ${
+                  i === 0 ? 'bg-amber-50/40 dark:bg-amber-500/10 border-amber-200/80 dark:border-amber-500/30'
+                  : i === 1 ? 'bg-slate-50/60 dark:bg-slate-500/10 border-slate-200/80 dark:border-slate-500/20'
+                  : i === 2 ? 'bg-orange-50/40 dark:bg-orange-500/10 border-orange-200/60 dark:border-orange-500/20'
+                  : 'bg-[#F8FAFC] dark:bg-[#1E293B]/60 border-[#E2E8F0] dark:border-[#334155]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className={`w-7 h-7 rounded-full flex items-center justify-center font-mono font-extrabold text-[13px] ${
+                    i === 0 ? 'bg-amber-400 text-white' : i === 1 ? 'bg-slate-400 text-white' : i === 2 ? 'bg-orange-400 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                  }`}>
+                    {i < 3 ? ['🥇','🥈','🥉'][i] : `#${entry.rank}`}
+                  </span>
+                  <img
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(entry.displayName)}&background=6366f1&color=fff&size=64`}
+                    alt={entry.displayName}
+                    className="w-9 h-9 rounded-full object-cover ring-2 ring-white dark:ring-[#1E293B]"
+                  />
+                  <span className="font-bold text-[14px] text-[#0F172A] dark:text-[#F8FAFC]">{entry.displayName}</span>
+                </div>
+                <div className="flex items-center gap-4 font-mono text-[13px]">
+                  <div className="flex items-center gap-1.5">
+                    <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    <span className="font-bold text-[#0F172A] dark:text-[#F8FAFC]">{entry.streak}d</span>
+                  </div>
+                  <span className="font-extrabold text-[#4F46E5] dark:text-[#818CF8]">+{entry.xp.toLocaleString('vi-VN')} XP</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
 
       {/* JOIN GROUP MODAL */}
       {isJoinModalOpen && (
